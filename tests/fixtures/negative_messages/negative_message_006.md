@@ -1,0 +1,1 @@
+Negative Test Case 6: Only BHK: 3 BHK

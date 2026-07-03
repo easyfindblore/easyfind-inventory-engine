@@ -1,0 +1,1 @@
+Negative Test Case 45: 2 BHK, Rent: 45000, Bellandur, Gated Community, 2 Bathrooms, 1 Balcony. Available Immediately. https://not-a-real-map-link.com/invalid

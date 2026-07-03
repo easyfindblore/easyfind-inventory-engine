@@ -1,0 +1,1 @@
+Negative Test Case 37: Impossible values: Rent: -1000, BHK: 0, Bathrooms: 100, Balcony: -5. Bellandur, Gated Community. https://maps.app.goo.gl/oQCKEG435u8Fp93U7

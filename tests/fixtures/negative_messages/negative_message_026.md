@@ -1,0 +1,1 @@
+Negative Test Case 26: Missing Location: 2 BHK, Rent: 45000, Deposit: 1.5L, Fully Furnished, 2 Bathrooms, 1 Balcony. Available Immediately. https://maps.app.goo.gl/oQCKEG435u8Fp93U7

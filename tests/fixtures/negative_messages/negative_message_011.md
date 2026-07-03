@@ -1,0 +1,1 @@
+Negative Test Case 11: Missing Rent: 2 BHK, Bellandur, Gated Community, 2 Bathrooms, 1 Balcony. Available Immediately. https://maps.app.goo.gl/oQCKEG435u8Fp93U7

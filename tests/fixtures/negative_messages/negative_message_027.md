@@ -1,0 +1,1 @@
+Negative Test Case 27: Only media (simulated): [Image attached] [Video attached]

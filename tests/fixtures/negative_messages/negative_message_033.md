@@ -1,0 +1,1 @@
+Negative Test Case 33: Only Rent: Rent 60k
