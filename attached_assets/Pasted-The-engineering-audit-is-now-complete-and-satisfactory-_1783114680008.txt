@@ -1,0 +1,167 @@
+The engineering audit is now complete and satisfactory.
+
+We are moving to the next phase of the project.
+
+Read this entire instruction carefully before taking any action.
+
+=========================================================
+CURRENT STATUS
+=========================================================
+
+The implementation appears complete and the local commits exist.
+
+The remaining engineering work is NOT feature development.
+
+The project is now entering a formal Verification & Validation phase.
+
+From this point forward there are TWO independent AI agents working on this repository.
+
+=========================================================
+ROLE SEPARATION (VERY IMPORTANT)
+=========================================================
+
+There are now two completely separate responsibilities.
+
+-----------------------------------------
+REPLIT AGENT (YOU)
+-----------------------------------------
+
+You are the Engineering Lead.
+
+You own ONLY:
+
+• architecture
+• implementation
+• source code
+• bug fixes
+• refactoring
+• deployment
+• infrastructure
+• Git
+• Render
+• Meta Webhook
+• engineering documentation
+• repository continuity
+• release management
+
+You are NOT responsible for creating regression datasets.
+
+You are NOT responsible for generating fake property conversations.
+
+You are NOT responsible for producing testing fixtures.
+
+You should never overwrite or interfere with testing assets created by Manus.
+
+-----------------------------------------
+MANUS AI
+-----------------------------------------
+
+Manus is the Test Engineering Lead.
+
+Manus owns ONLY:
+
+• regression datasets
+• property test conversations
+• WhatsApp message fixtures
+• batch testing
+• validation suites
+• parser validation
+• normalization validation
+• duplicate detection validation
+• edge-case generation
+• stress testing
+• failure testing
+• negative testing
+• production simulation
+• QA documentation
+
+Manus will intentionally attempt to break your implementation.
+
+This is expected.
+
+Treat Manus outputs as the official testing source.
+
+Do NOT regenerate or rewrite Manus testing assets unless explicitly instructed by the user.
+
+=========================================================
+ENGINEERING CONTINUITY
+=========================================================
+
+Update all Replit continuity documents so future Replit sessions understand this separation.
+
+Where appropriate (START_HERE.md, replit.md, REPLIT_ENGINEERING_LOG.md, PROJECT_STATUS.md, repository guide, engineering continuity docs, etc.) add a clearly marked Engineering Governance section explaining:
+
+• Replit owns engineering.
+• Manus owns testing.
+• Neither agent should overwrite the other's work.
+• Testing assets are maintained independently.
+• Engineering documents are maintained independently.
+• Both agents collaborate only through documented interfaces and repository structure.
+
+Do NOT modify any Manus-owned documents.
+
+Only update Replit engineering continuity documents.
+
+=========================================================
+GIT
+=========================================================
+
+The implementation has now passed the engineering audit.
+
+Push the local commits to GitHub.
+
+Requirements:
+
+• preserve commit history
+• do NOT squash commits
+• do NOT rewrite history
+• push the existing local commits exactly as they are
+• verify origin/main now contains every local commit
+• verify the repository is fully synchronized
+• verify there are no local commits remaining after push
+
+Show:
+
+git log --oneline --decorate -10
+
+git status
+
+=========================================================
+DO NOT DEPLOY
+=========================================================
+
+Do NOT deploy to Render.
+
+Do NOT configure production environment variables.
+
+Do NOT register the Meta webhook.
+
+Deployment will happen only after the Verification & Validation phase has completed successfully.
+
+=========================================================
+AFTER PUSH
+=========================================================
+
+After GitHub has been updated, provide:
+
+1. confirmation that origin/main contains the latest implementation
+
+2. confirmation that a fresh clone will now retrieve the implementation
+
+3. confirmation that the repository ZIP downloaded from GitHub will contain the latest source code
+
+4. list any remaining engineering risks before deployment
+
+=========================================================
+IMPORTANT
+=========================================================
+
+Do NOT create new features.
+
+Do NOT regenerate existing code.
+
+Do NOT rebuild the repository.
+
+Do NOT alter business logic unless required to successfully push the existing work.
+
+Your responsibility is now engineering maintenance while Manus performs comprehensive testing.
