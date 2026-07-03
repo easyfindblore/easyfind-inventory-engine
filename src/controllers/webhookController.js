@@ -199,9 +199,6 @@ async function handleDone(senderPhone, messageId) {
       return;
     }
 
-    // 4. Generate PID
-    const pid = await generateNextPID();
-
     // 5. Download media from WhatsApp — treat any download failure as blocking
     const mediaItems = [];
     let downloadFailCount = 0;
@@ -235,8 +232,7 @@ async function handleDone(senderPhone, messageId) {
     //   All three steps run inside a single in-process lock so no concurrent session
     //   can read the same row count before either write commits.
     //   Any Cloudinary failure throws inside the callback, which aborts the append.
-    let pid;
-    const { ok: saved, pid: resolvedPid } = await generatePIDAndAppend(
+    const { ok: saved, pid } = await generatePIDAndAppend(
       normalized,
       async (confirmedPid) => {
         if (mediaItems.length === 0) return [];
@@ -249,7 +245,6 @@ async function handleDone(senderPhone, messageId) {
       senderPhone,
       messageId
     );
-    pid = resolvedPid;
 
     if (!saved) {
       sessionManager.destroySession(senderPhone);
