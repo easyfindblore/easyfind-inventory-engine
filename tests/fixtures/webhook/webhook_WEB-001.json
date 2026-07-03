@@ -1,0 +1,43 @@
+{
+    "id": "WEB-001",
+    "description": "Single Text Message",
+    "payload": {
+        "object": "whatsapp_business_account",
+        "entry": [
+            {
+                "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "metadata": {
+                                "display_phone_number": "PHONE_NUMBER",
+                                "phone_number_id": "PHONE_NUMBER_ID"
+                            },
+                            "contacts": [
+                                {
+                                    "profile": {
+                                        "name": "John Doe"
+                                    },
+                                    "wa_id": "SENDER_WA_ID"
+                                }
+                            ],
+                            "messages": [
+                                {
+                                    "from": "SENDER_WA_ID",
+                                    "id": "MESSAGE_ID",
+                                    "timestamp": "TIMESTAMP",
+                                    "text": {
+                                        "body": "2 BHK, Bellandur, Rent 45k..."
+                                    },
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "field": "messages"
+                    }
+                ]
+            }
+        ]
+    }
+}

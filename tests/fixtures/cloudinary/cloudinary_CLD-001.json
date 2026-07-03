@@ -1,0 +1,15 @@
+{
+    "id": "CLD-001",
+    "description": "Successful Upload Response",
+    "response": {
+        "public_id": "inventory/PID-1001/img_001",
+        "version": 123456789,
+        "signature": "abcdefg",
+        "width": 1000,
+        "height": 1000,
+        "format": "jpg",
+        "resource_type": "image",
+        "url": "http://res.cloudinary.com/demo/image/upload/v123456789/inventory/PID-1001/img_001.jpg",
+        "secure_url": "https://res.cloudinary.com/demo/image/upload/v123456789/inventory/PID-1001/img_001.jpg"
+    }
+}
