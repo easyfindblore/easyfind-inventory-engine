@@ -1,4 +1,5 @@
-# EasyFind Inventory Sheet Specification
+EasyFind Inventory Sheet Specification
+
 Version: 1.0
 Status: Final
 Owner: EasyFind
@@ -6,27 +7,37 @@ Purpose:
 Defines the complete inventory schema for all property insertions.
 Every inventory transaction MUST follow this specification.
 
---------------------------------------------------------------------
+
+---
+
 GENERAL RULES
---------------------------------------------------------------------
 
 1. One Google Sheet Row = One Property
 
+
 2. One WhatsApp Transaction = One Property
+
 
 3. No column may be skipped if a value exists.
 
+
 4. Dropdown columns MUST always contain one of the allowed values.
+
 
 5. Never create new dropdown values.
 
+
 6. Empty value is allowed ONLY if data genuinely doesn't exist.
+
 
 7. Inventory Sheet is the Single Source of Truth.
 
---------------------------------------------------------------------
+
+
+
+---
+
 COLUMN SPECIFICATION
---------------------------------------------------------------------
 
 Column A
 
@@ -51,7 +62,8 @@ Automation
 Editable:
 NO
 
-------------------------------------------------------------
+
+---
 
 Column B
 
@@ -73,7 +85,8 @@ Internal
 Owner:
 Manual
 
-------------------------------------------------------------
+
+---
 
 Column C
 
@@ -95,7 +108,8 @@ Must match one of the approved locations.
 
 Never write free text.
 
-------------------------------------------------------------
+
+---
 
 Column D
 
@@ -118,7 +132,8 @@ Allowed Values
 
 • Villa
 
-------------------------------------------------------------
+
+---
 
 Column E
 
@@ -151,7 +166,8 @@ BHK
 
 Map Links
 
-------------------------------------------------------------
+
+---
 
 Column F
 
@@ -184,7 +200,8 @@ Examples
 
 5 BHK
 
-------------------------------------------------------------
+
+---
 
 Column G
 
@@ -194,7 +211,8 @@ Type
 
 Number
 
-------------------------------------------------------------
+
+---
 
 Column H
 
@@ -204,7 +222,8 @@ Type
 
 Number
 
-------------------------------------------------------------
+
+---
 
 Column I
 
@@ -216,7 +235,8 @@ Text
 
 (Currently Manual)
 
-------------------------------------------------------------
+
+---
 
 Column J
 
@@ -246,7 +266,8 @@ Never store
 
 Automation must normalize.
 
-------------------------------------------------------------
+
+---
 
 Column K
 
@@ -268,7 +289,8 @@ Ground
 
 15/20
 
-------------------------------------------------------------
+
+---
 
 Column L
 
@@ -284,7 +306,8 @@ Semi Furnished
 
 Unfurnished
 
-------------------------------------------------------------
+
+---
 
 Column M
 
@@ -296,7 +319,8 @@ Allowed values will always come from Tenant Master.
 
 Never create new values.
 
-------------------------------------------------------------
+
+---
 
 Column N
 
@@ -314,7 +338,8 @@ Non Veg
 
 Blank
 
-------------------------------------------------------------
+
+---
 
 Column O
 
@@ -328,7 +353,8 @@ Yes
 
 No
 
-------------------------------------------------------------
+
+---
 
 Column P
 
@@ -342,7 +368,8 @@ Example
 
 (No commas)
 
-------------------------------------------------------------
+
+---
 
 Column Q
 
@@ -358,7 +385,8 @@ Examples
 
 Included
 
-------------------------------------------------------------
+
+---
 
 Column R
 
@@ -370,7 +398,8 @@ Example
 
 250000
 
-------------------------------------------------------------
+
+---
 
 Column S
 
@@ -382,7 +411,8 @@ Format
 
 DD Month YYYY
 
-------------------------------------------------------------
+
+---
 
 Column T
 
@@ -396,7 +426,8 @@ No
 
 Negotiable
 
-------------------------------------------------------------
+
+---
 
 Column U
 
@@ -404,7 +435,8 @@ Visit Timings
 
 Text
 
-------------------------------------------------------------
+
+---
 
 Column V
 
@@ -416,7 +448,8 @@ Default
 
 Available
 
-------------------------------------------------------------
+
+---
 
 Column W
 
@@ -424,7 +457,8 @@ Date Added
 
 System Timestamp
 
-------------------------------------------------------------
+
+---
 
 Column X
 
@@ -432,7 +466,8 @@ Last Updated
 
 System Timestamp
 
-------------------------------------------------------------
+
+---
 
 Column Y
 
@@ -440,7 +475,8 @@ Message ID
 
 WhatsApp Message ID
 
-------------------------------------------------------------
+
+---
 
 Column Z
 
@@ -448,7 +484,8 @@ Sender Phone
 
 WhatsApp Number
 
-------------------------------------------------------------
+
+---
 
 Column AA
 
@@ -458,7 +495,8 @@ Google Maps URL
 
 Only Google Maps URLs allowed.
 
-------------------------------------------------------------
+
+---
 
 Column AB
 
@@ -468,7 +506,8 @@ Original Property Message
 
 Never Modified.
 
-------------------------------------------------------------
+
+---
 
 Column AC
 
@@ -476,7 +515,8 @@ Message Timestamp
 
 ISO Timestamp
 
-------------------------------------------------------------
+
+---
 
 Column AD
 
@@ -488,7 +528,8 @@ Used for Duplicate Detection.
 
 Never Editable.
 
-------------------------------------------------------------
+
+---
 
 Column AE
 
@@ -506,7 +547,8 @@ Videos
 
 All uploaded media
 
-------------------------------------------------------------
+
+---
 
 INSERT VALIDATION RULES
 
@@ -534,7 +576,8 @@ Return Failure Message
 
 No partial insertion.
 
-------------------------------------------------------------
+
+---
 
 DROPDOWN RULE
 
@@ -544,13 +587,18 @@ Automation MUST
 
 1. Read allowed values
 
+
 2. Match incoming value
+
 
 3. Store only approved value
 
+
+
 Never write custom values.
 
-------------------------------------------------------------
+
+---
 
 MEDIA RULE
 
@@ -562,7 +610,8 @@ Stored in Cloudinary
 
 Google Sheet stores only secure URLs.
 
-------------------------------------------------------------
+
+---
 
 DUPLICATE RULE
 
@@ -578,7 +627,8 @@ Upload only new media
 
 Return update summary.
 
-------------------------------------------------------------
+
+---
 
 TRANSACTION RULE
 
