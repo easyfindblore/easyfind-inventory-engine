@@ -166,4 +166,17 @@ Steps:
 
 ---
 
+## Cross-References
+
+| Document | Purpose |
+|----------|---------|
+| [`START_HERE.md`](../../START_HERE.md) | Session onboarding, rules, file map |
+| [`docs/governance/ROADMAP.md`](../governance/ROADMAP.md) | Phase-level plan |
+| [`docs/governance/IMPLEMENTATION_CHECKLIST.md`](../governance/IMPLEMENTATION_CHECKLIST.md) | Pre-session + pre-deploy checklists |
+| [`docs/governance/implementation_tracker.md`](../governance/implementation_tracker.md) | Task-level status |
+| [`docs/development/REPLIT_ENGINEERING_LOG.md`](REPLIT_ENGINEERING_LOG.md) | Session history |
+| [`docs/development/WEBHOOK_INCIDENT_REPORT.md`](WEBHOOK_INCIDENT_REPORT.md) | Deployment incident report |
+
+---
+
 *End of PROJECT_STATUS.md*

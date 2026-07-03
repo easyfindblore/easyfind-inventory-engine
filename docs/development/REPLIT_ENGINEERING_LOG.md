@@ -305,6 +305,19 @@ The application runs locally. Deployment to Render is blocked until GitHub authe
 
 ---
 
+### Session 001 — Cross-Reference Index
+
+| Document | Purpose |
+|----------|---------|
+| [`START_HERE.md`](../../START_HERE.md) | Session onboarding, rules, file map (created this session) |
+| [`docs/governance/ROADMAP.md`](../governance/ROADMAP.md) | Phase-level plan (created this session) |
+| [`docs/governance/IMPLEMENTATION_CHECKLIST.md`](../governance/IMPLEMENTATION_CHECKLIST.md) | Pre-session + pre-deploy checklists (created this session) |
+| [`docs/governance/implementation_tracker.md`](../governance/implementation_tracker.md) | Task-level status (updated this session) |
+| [`docs/development/PROJECT_STATUS.md`](PROJECT_STATUS.md) | Current state snapshot (created this session) |
+| [`docs/development/WEBHOOK_INCIDENT_REPORT.md`](WEBHOOK_INCIDENT_REPORT.md) | Root cause + resolution checklist (created this session) |
+
+---
+
 *End of Session 001*
 
 ---
