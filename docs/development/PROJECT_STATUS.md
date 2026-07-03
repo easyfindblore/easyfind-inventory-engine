@@ -179,4 +179,17 @@ Steps:
 
 ---
 
+## Engineering Governance
+
+**Two-agent model active as of Session 002.**
+
+| Agent | Role | Owns |
+|-------|------|------|
+| Replit Agent | Engineering Lead | Source code, infrastructure, engineering docs, Git, Render |
+| Manus AI | Test Engineering Lead | Regression datasets, test fixtures, validation suites, QA docs |
+
+Neither agent overwrites the other's work. See `START_HERE.md` for full rules.
+
+---
+
 *End of PROJECT_STATUS.md*

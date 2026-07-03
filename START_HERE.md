@@ -94,6 +94,35 @@ docs/
 
 ---
 
+## Engineering Governance — Two-Agent Model
+
+**This project uses two independent AI agents with strictly separated responsibilities. Neither agent overwrites the other's work.**
+
+### Replit Agent — Engineering Lead
+Owns: architecture, source code, bug fixes, refactoring, deployment, infrastructure, Git, Render, Meta Webhook, engineering documentation, repository continuity, release management.
+
+Does NOT own: regression datasets, test fixtures, WhatsApp message conversations, parser/normalizer validation suites, QA documentation.
+
+### Manus AI — Test Engineering Lead
+Owns: regression datasets, property test conversations, WhatsApp message fixtures, batch testing, validation suites, parser/normalizer/duplicate-detection validation, edge-case generation, stress testing, failure testing, negative testing, production simulation, QA documentation.
+
+### Rules
+- Replit Agent must not regenerate, overwrite, or modify any assets created by Manus.
+- Manus must not modify source code, engineering docs, or infrastructure config.
+- Collaboration happens only through documented interfaces and repository structure.
+- Testing assets delivered by Manus are treated as the official testing source.
+- Manus will intentionally attempt to break the implementation — this is expected and correct.
+
+### Filesystem Convention
+| Path pattern | Owner |
+|-------------|-------|
+| `src/` | Replit Agent |
+| `docs/development/`, `docs/governance/`, `docs/architecture/`, `docs/contracts/` | Replit Agent |
+| `tests/`, `fixtures/`, `regression/` (when created) | Manus AI |
+| `docs/specs/` | Shared read-only reference (neither agent modifies specs) |
+
+---
+
 ## Mandatory Session Rules
 
 These are permanent engineering requirements. Violating them is a critical failure.

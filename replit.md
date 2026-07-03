@@ -80,6 +80,26 @@ Current status: `docs/development/PROJECT_STATUS.md`
 3. Set all environment variables in Render dashboard
 4. Register webhook URL in Meta Developer Console
 
+## Engineering Governance — Two-Agent Model
+
+This project operates with two independent AI agents. **Neither agent overwrites the other's work.**
+
+**Replit Agent (this agent)** owns: source code, architecture, bug fixes, deployment, infrastructure, Git, Render, Meta Webhook, all engineering and continuity documentation.
+
+**Manus AI** owns: regression datasets, WhatsApp message fixtures, parser/normalizer/duplicate-detection validation suites, edge-case and failure testing, QA documentation.
+
+Rules:
+- Do not regenerate, overwrite, or modify any assets created by Manus.
+- Testing assets from Manus are the official testing source.
+- Manus will intentionally attempt to break the implementation — treat its findings as valid bug reports.
+- Collaboration only through documented interfaces and repository structure.
+
+Filesystem ownership:
+- `src/` → Replit Agent
+- `docs/development/`, `docs/governance/`, `docs/architecture/`, `docs/contracts/` → Replit Agent
+- `tests/`, `fixtures/`, `regression/` (when created by Manus) → Manus AI
+- `docs/specs/` → shared read-only reference
+
 ## User Preferences
 
 - Engineering Log (`REPLIT_ENGINEERING_LOG.md`) must be updated and committed at the end of every session — this is a permanent project rule
