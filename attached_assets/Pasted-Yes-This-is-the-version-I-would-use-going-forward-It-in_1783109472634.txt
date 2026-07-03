@@ -1,0 +1,397 @@
+Yes. This is the version I would use going forward. It incorporates everything from your current checkpoint, including the mandatory Engineering Journal requirement.
+
+You are taking over an existing production project.
+
+THIS IS NOT A NEW PROJECT.
+
+Your first responsibility is to synchronize yourself with the existing GitHub repository and continue exactly where the previous Replit Agent stopped.
+
+DO NOT restart the project.
+
+DO NOT recreate architecture.
+
+DO NOT recreate documentation.
+
+DO NOT replace existing modules unless there is a proven engineering reason.
+
+DO NOT change the technology stack.
+
+=========================================================
+PROJECT
+=========================================================
+
+Project:
+EasyFind Inventory Engine
+
+Repository:
+Already connected to this Replit workspace.
+
+Technology Stack (DO NOT CHANGE)
+
+• Node.js
+• GitHub
+• Replit
+• Render
+• WhatsApp Cloud API
+• Google Sheets (Master Inventory Database)
+• Cloudinary (Media Storage)
+
+Google Sheets remains the only database.
+
+Cloudinary remains the only media storage.
+
+OpenAI is NOT required at this stage.
+
+If AI support already exists, keep it behind an interface with placeholder configuration only.
+
+=========================================================
+FIRST TASK — FULL REPOSITORY SYNCHRONIZATION
+=========================================================
+
+Before writing any code:
+
+Perform a complete repository audit.
+
+Understand everything already built.
+
+Review:
+
+• Repository structure
+• Existing documentation
+• Current architecture
+• Modules
+• Routes
+• Services
+• Utilities
+• Parser
+• Session engine
+• Logger
+• Constants
+• Configuration
+• Environment variables
+• Deployment files
+• Existing commits
+
+Do NOT recreate existing work.
+
+Continue from the latest implementation.
+
+=========================================================
+CURRENT PROJECT STATUS
+=========================================================
+
+The previous Replit Agent already completed most of Phase 1.
+
+Completed:
+
+✓ Repository restructuring
+
+✓ Modular architecture
+
+✓ Deterministic parser
+
+✓ Session architecture
+
+✓ WhatsApp module
+
+✓ Google Sheets module
+
+✓ Cloudinary module
+
+✓ Logging system
+
+✓ Constants
+
+✓ Configuration layer
+
+✓ README
+
+✓ Roadmap
+
+✓ Phase Tracker
+
+✓ Environment documentation
+
+✓ Parser normalization
+
+✓ Parser testing
+
+The project is currently blocked by a production webhook issue.
+
+=========================================================
+HIGHEST PRIORITY
+=========================================================
+
+Before continuing anything else:
+
+Restore the Render production webhook.
+
+The webhook worked perfectly before the repository refactor.
+
+After recent repository changes production stopped working.
+
+Do NOT guess.
+
+Investigate until the exact root cause is proven.
+
+=========================================================
+WEBHOOK INVESTIGATION
+=========================================================
+
+Perform a complete production investigation.
+
+Verify:
+
+• Render deployment
+
+• Latest deployed commit
+
+• Build logs
+
+• Runtime logs
+
+• Environment variables
+
+• Route registration
+
+• Express middleware order
+
+• Body parser
+
+• Raw body handling
+
+• Signature verification
+
+• Startup sequence
+
+• GET /webhook
+
+• POST /webhook
+
+• Meta verification flow
+
+• GitHub branch connected to Render
+
+• Regression introduced during repository refactor
+
+Produce evidence.
+
+Identify the exact files responsible.
+
+Implement the fix.
+
+Verify locally.
+
+Verify production compatibility.
+
+=========================================================
+ENGINEERING CONTINUITY (MANDATORY)
+=========================================================
+
+Create the following directory if it does not already exist:
+
+docs/development/
+
+Inside it create (or continue) the following files.
+
+1.
+
+REPLIT_ENGINEERING_LOG.md
+
+This is the permanent engineering history of the repository.
+
+It MUST NEVER be overwritten.
+
+Every Replit Agent session MUST append a new entry.
+
+Each session entry must contain:
+
+------------------------------------------------
+
+Session Number
+
+Date & Time
+
+Objective
+
+Original Prompt
+
+Repository Status Before Work
+
+Files Inspected
+
+Files Created
+
+Files Modified
+
+Files Deleted
+
+Reason for Every Change
+
+Architecture Decisions
+
+Code Changes
+
+Testing Performed
+
+Deployment Verification
+
+Webhook Status
+
+Problems Found
+
+Root Cause Analysis
+
+Known Issues
+
+Remaining Work
+
+Next Recommended Task
+
+Git Branch
+
+Commit Hash
+
+Complete File List
+
+Detailed Engineering Notes
+
+Session Summary
+
+------------------------------------------------
+
+This document becomes the engineering source of truth.
+
+Any future engineer should understand the entire project simply by reading this file.
+
+Never overwrite previous sessions.
+
+Always append.
+
+=========================================================
+PROJECT STATUS
+=========================================================
+
+Maintain another file:
+
+docs/development/PROJECT_STATUS.md
+
+Unlike the Engineering Log, this file always represents the CURRENT repository state.
+
+Update it every session.
+
+Include:
+
+Overall Completion %
+
+Current Phase
+
+Completed Modules
+
+Modules Under Development
+
+Pending Modules
+
+Blocked Items
+
+Production Readiness
+
+Webhook Status
+
+Documentation Status
+
+Deployment Status
+
+Known Issues
+
+Immediate Next Milestone
+
+=========================================================
+WEBHOOK INCIDENT REPORT
+=========================================================
+
+Maintain:
+
+docs/development/WEBHOOK_INCIDENT_REPORT.md
+
+Document:
+
+Timeline
+
+Symptoms
+
+Root Cause
+
+Evidence
+
+Files Affected
+
+Fix Implemented
+
+Verification Steps
+
+Lessons Learned
+
+Preventive Actions
+
+=========================================================
+IMPLEMENTATION RULES
+=========================================================
+
+Do NOT implement:
+
+• Search Engine
+
+• Duplicate Detection
+
+• AI Parsing
+
+• OCR
+
+• Dashboard
+
+• Analytics
+
+• Advanced Validation
+
+These belong to later phases.
+
+Only prepare architecture if required.
+
+No new business features until production is restored.
+
+=========================================================
+DELIVERABLES
+=========================================================
+
+Before ending this session:
+
+✓ Repository audited
+
+✓ Existing work verified
+
+✓ Render webhook restored (or exact root cause identified with evidence)
+
+✓ Engineering Journal updated
+
+✓ Project Status updated
+
+✓ Webhook Incident Report updated
+
+✓ Documentation synchronized
+
+✓ Phase Tracker updated
+
+✓ Remaining Work Checklist updated
+
+✓ Clear recommendation for the next engineering session
+
+Commit everything with clear and meaningful commit messages.
+
+The repository should always be left in a stable, production-ready state before proceeding to Phase 2.
+
+I would make one additional rule permanent for this project:
+
+No Replit Agent session is considered complete unless docs/development/REPLIT_ENGINEERING_LOG.md has been updated and committed.
+
+That single rule will preserve continuity across all your Replit accounts and any future AI agent you use.
