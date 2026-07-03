@@ -1,0 +1,1 @@
+Search Query 34: Sarjapur Road 2 BHK Family only

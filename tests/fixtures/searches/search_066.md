@@ -1,0 +1,1 @@
+Search Query 66: Looking for 3 BHK Bachelor friendly Bellandur

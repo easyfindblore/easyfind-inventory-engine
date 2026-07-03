@@ -1,0 +1,1 @@
+Search Query 37: Sarjapur Road 2 BHK Bachelor friendly

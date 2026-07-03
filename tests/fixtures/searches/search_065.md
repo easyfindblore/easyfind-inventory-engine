@@ -1,0 +1,1 @@
+Search Query 65: Gated community in Marathahalli under 60k

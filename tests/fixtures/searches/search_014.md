@@ -1,0 +1,1 @@
+Search Query 14: 1 BHK under 40k in Bellandur

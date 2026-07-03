@@ -1,0 +1,1 @@
+Search Query 32: Stand alone in Harlur around 50k

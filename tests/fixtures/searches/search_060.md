@@ -1,0 +1,1 @@
+Search Query 60: around 50k Gated community Harlur

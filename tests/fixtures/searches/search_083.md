@@ -1,0 +1,1 @@
+Search Query 83: 1 BHK around 50k in Marathahalli

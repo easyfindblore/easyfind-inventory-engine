@@ -1,0 +1,1 @@
+Search Query 19: around 50k Gated community Kasavanahalli

@@ -1,0 +1,1 @@
+Search Query 21: 3 BHK around 50k in Harlur

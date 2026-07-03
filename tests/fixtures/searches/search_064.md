@@ -1,0 +1,1 @@
+Search Query 64: Looking for 3 BHK Semi furnished Kasavanahalli

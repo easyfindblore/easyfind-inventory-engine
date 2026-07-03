@@ -1,0 +1,1 @@
+Search Query 48: 2 BHK around 50k in Sarjapur Road

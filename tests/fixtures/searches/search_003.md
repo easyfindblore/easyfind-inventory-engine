@@ -1,0 +1,1 @@
+Search Query 3: 2 BHK under 60k in Marathahalli

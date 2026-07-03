@@ -1,0 +1,1 @@
+Search Query 35: Looking for 1 BHK Vegetarian Kasavanahalli

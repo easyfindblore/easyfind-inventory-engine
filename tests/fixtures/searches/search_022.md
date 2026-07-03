@@ -1,0 +1,1 @@
+Search Query 22: under 60k Villa Kasavanahalli
