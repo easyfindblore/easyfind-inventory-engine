@@ -220,19 +220,36 @@ async function updateImageUrls(rowIndex, imageUrls) {
 }
 
 /**
- * In-process lock to prevent concurrent PID generation races.
- * Single-process guard — sufficient for one Render instance.
+ * In-process mutex that serializes the full PID-generation + Sheets-append
+ * critical section. Holding the lock through both the row-count read AND the
+ * append prevents two concurrent sessions from computing the same sequence
+ * number before either commit lands.
+ *
+ * Single-process guard — one Render instance at a time, which is the
+ * deployment model described in docs/architecture/10_system_architecture.md.
  */
 let _pidLock = Promise.resolve();
 
 /**
- * Generate the next available PID in a serialized, collision-safe way.
- * Uses a chained promise lock so concurrent sessions cannot read the same
- * row count before either has written.
- * @returns {Promise<string>}
+ * Atomically generate the next PID, upload media, and append the property row
+ * to Google Sheets — all inside a single serialized critical section.
+ *
+ * Holding the lock from row-count read through append prevents any concurrent
+ * session from receiving the same PID before either write commits.
+ *
+ * The Cloudinary upload also runs inside the lock so the real PID is available
+ * for deterministic public_id naming before the row is written.
+ *
+ * @param {Object} property — normalized property fields
+ * @param {Function} getImageUrls — async (pid: string) => string[]
+ *   Called inside the lock with the confirmed PID. Must throw on failure.
+ * @param {string} senderPhone
+ * @param {string} messageId
+ * @returns {Promise<{ok: boolean, pid: string|null}>}
  */
-function generateNextPID() {
+function generatePIDAndAppend(property, getImageUrls, senderPhone, messageId) {
   _pidLock = _pidLock.then(async () => {
+    // 1. Read current rows to determine today's sequence number
     const rows = await getAllRows();
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -246,15 +263,31 @@ function generateNextPID() {
         }
       }
     }
+    const pid = generatePID(today, todayCount + 1);
 
-    return generatePID(today, todayCount + 1);
+    // 2. Upload media (if any) using the confirmed PID — still inside lock
+    //    Any upload failure throws, which propagates to the catch below.
+    const imageUrls = await getImageUrls(pid);
+
+    // 3. Append row — still inside lock
+    const ok = await appendProperty(property, pid, imageUrls, senderPhone, messageId);
+    return { ok, pid };
   }).catch((err) => {
-    logger.error('generateNextPID failed', { error: err.message });
-    // Return a fallback timestamp-based PID to avoid blocking
-    return generatePID(new Date(), Date.now() % 1000);
+    logger.error('generatePIDAndAppend failed', { error: err.message });
+    return { ok: false, pid: null };
   });
 
   return _pidLock;
+}
+
+/**
+ * @deprecated Use generatePIDAndAppend instead. Kept for reference only.
+ * Generates a PID without holding the lock through the append — unsafe for
+ * concurrent sessions. Will be removed once all callers migrate.
+ */
+function generateNextPID() {
+  logger.warn('generateNextPID called outside lock — use generatePIDAndAppend for write safety');
+  return Promise.resolve(generatePID(new Date(), Date.now() % 1000));
 }
 
 /**
@@ -276,4 +309,5 @@ module.exports = {
   findByPid,
   updateImageUrls,
   generateNextPID,
+  generatePIDAndAppend,
 };

@@ -17,7 +17,7 @@ const { parseMessage } = require('../parser/messageParser');
 const { normalize } = require('../normalizer/normalizer');
 const { sendTextMessage, downloadMedia, RESPONSES } = require('../services/whatsapp');
 const { uploadAllMedia } = require('../services/cloudinary');
-const { appendProperty, generateNextPID, findByPid, updateImageUrls } = require('../services/sheets');
+const { generatePIDAndAppend, findByPid, updateImageUrls } = require('../services/sheets');
 
 // Required fields for a valid property submission
 const REQUIRED_FIELDS = ['location', 'rent', 'apartmentType'];
@@ -202,37 +202,61 @@ async function handleDone(senderPhone, messageId) {
     // 4. Generate PID
     const pid = await generateNextPID();
 
-    // 5. Download media from WhatsApp
+    // 5. Download media from WhatsApp — treat any download failure as blocking
     const mediaItems = [];
+    let downloadFailCount = 0;
     for (const imgId of snapshot.images) {
       const media = await downloadMedia(imgId);
-      if (media) mediaItems.push({ buffer: media.buffer, type: 'image' });
+      if (media) {
+        mediaItems.push({ buffer: media.buffer, type: 'image' });
+      } else {
+        downloadFailCount++;
+        logger.warn('Media download failed', { imgId });
+      }
     }
     for (const vidId of snapshot.videos) {
       const media = await downloadMedia(vidId);
-      if (media) mediaItems.push({ buffer: media.buffer, type: 'video' });
-    }
-
-    // 6. Upload media to Cloudinary — any failure blocks commit (per Doc 05 contract)
-    let imageUrls = [];
-    if (mediaItems.length > 0) {
-      const { urls, failCount } = await uploadAllMedia(pid, mediaItems);
-      if (failCount > 0) {
-        logger.error('Media upload failed — property not committed', { pid, failCount });
-        sessionManager.destroySession(senderPhone);
-        await sendTextMessage(senderPhone,
-          `━━━━━━━━━━━━━━━━━━\n❌ *Property not added.*\n\n*Reason*\nMedia upload failed (${failCount} file${failCount > 1 ? 's' : ''} could not be uploaded).\n\nPlease try again.\n━━━━━━━━━━━━━━━━━━`
-        );
-        return;
+      if (media) {
+        mediaItems.push({ buffer: media.buffer, type: 'video' });
+      } else {
+        downloadFailCount++;
+        logger.warn('Media download failed', { vidId });
       }
-      imageUrls = urls;
+    }
+    if (downloadFailCount > 0) {
+      sessionManager.destroySession(senderPhone);
+      await sendTextMessage(senderPhone,
+        `━━━━━━━━━━━━━━━━━━\n❌ *Property not added.*\n\n*Reason*\n${downloadFailCount} media file${downloadFailCount > 1 ? 's' : ''} could not be downloaded from WhatsApp.\n\nPlease try again.\n━━━━━━━━━━━━━━━━━━`
+      );
+      return;
     }
 
-    // 7. Append to Google Sheets
-    const saved = await appendProperty(normalized, pid, imageUrls, senderPhone, messageId);
+    // 6 + 7. Atomically: generate PID → upload Cloudinary (with real PID) → append Sheets.
+    //   All three steps run inside a single in-process lock so no concurrent session
+    //   can read the same row count before either write commits.
+    //   Any Cloudinary failure throws inside the callback, which aborts the append.
+    let pid;
+    const { ok: saved, pid: resolvedPid } = await generatePIDAndAppend(
+      normalized,
+      async (confirmedPid) => {
+        if (mediaItems.length === 0) return [];
+        const { urls, failCount } = await uploadAllMedia(confirmedPid, mediaItems);
+        if (failCount > 0) {
+          throw new Error(`${failCount} media file${failCount > 1 ? 's' : ''} could not be uploaded to Cloudinary`);
+        }
+        return urls;
+      },
+      senderPhone,
+      messageId
+    );
+    pid = resolvedPid;
+
     if (!saved) {
       sessionManager.destroySession(senderPhone);
-      await sendTextMessage(senderPhone, RESPONSES.sheetsError());
+      // Distinguish Cloudinary failure from Sheets failure in the reply
+      await sendTextMessage(senderPhone,
+        `━━━━━━━━━━━━━━━━━━\n❌ *Property not added.*\n\nMedia upload or database write failed. Please try again.\n━━━━━━━━━━━━━━━━━━`
+      );
       return;
     }
 
@@ -273,19 +297,35 @@ async function handleAddMediaDone(senderPhone, session) {
 
     const existingUrls = (existing.data.imageUrls || '').split(',').map((u) => u.trim()).filter(Boolean);
 
-    // Download new media
+    // Download new media — treat any download failure as blocking
     const mediaItems = [];
+    let dlFail = 0;
     for (const imgId of snapshot.images) {
       const media = await downloadMedia(imgId);
-      if (media) mediaItems.push({ buffer: media.buffer, type: 'image' });
+      if (media) { mediaItems.push({ buffer: media.buffer, type: 'image' }); } else { dlFail++; }
     }
     for (const vidId of snapshot.videos) {
       const media = await downloadMedia(vidId);
-      if (media) mediaItems.push({ buffer: media.buffer, type: 'video' });
+      if (media) { mediaItems.push({ buffer: media.buffer, type: 'video' }); } else { dlFail++; }
+    }
+    if (dlFail > 0) {
+      sessionManager.destroySession(senderPhone);
+      await sendTextMessage(senderPhone,
+        `━━━━━━━━━━━━━━━━━━\n❌ *Media not added.*\n\n*Reason*\n${dlFail} file${dlFail > 1 ? 's' : ''} could not be downloaded from WhatsApp.\n\nPlease try again.\n━━━━━━━━━━━━━━━━━━`
+      );
+      return;
     }
 
-    // Upload to Cloudinary with offset index
-    const { urls } = await uploadAllMedia(pid, mediaItems, existingUrls.length);
+    // Upload to Cloudinary — any failure blocks Sheets update (fail-closed)
+    const { urls, failCount } = await uploadAllMedia(pid, mediaItems, existingUrls.length);
+    if (failCount > 0) {
+      logger.error('Add-media Cloudinary upload failed — Sheets not updated', { pid, failCount });
+      sessionManager.destroySession(senderPhone);
+      await sendTextMessage(senderPhone,
+        `━━━━━━━━━━━━━━━━━━\n❌ *Media not added.*\n\n*Reason*\n${failCount} file${failCount > 1 ? 's' : ''} could not be uploaded.\n\nPlease try again.\n━━━━━━━━━━━━━━━━━━`
+      );
+      return;
+    }
     const allUrls = [...existingUrls, ...urls];
 
     // Update Google Sheets — check return value
