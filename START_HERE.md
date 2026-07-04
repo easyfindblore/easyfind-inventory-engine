@@ -165,7 +165,6 @@ All documented in `.env.example`. Required for any real traffic:
 WHATSAPP_ACCESS_TOKEN
 WHATSAPP_PHONE_NUMBER_ID
 WHATSAPP_VERIFY_TOKEN
-WHATSAPP_APP_SECRET
 
 GOOGLE_SPREADSHEET_ID
 GOOGLE_SERVICE_ACCOUNT_JSON     ← full service account JSON as a single-line string

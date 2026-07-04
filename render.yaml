@@ -2,6 +2,7 @@ services:
   - type: web
     name: easyfind-inventory-engine
     runtime: node
+    autoDeploy: true
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
@@ -14,9 +15,6 @@ services:
       - key: PHONE_NUMBER_ID
         sync: false
       - key: VERIFY_TOKEN
-        sync: false
-      # WHATSAPP_APP_SECRET is optional — HMAC verification is skipped when absent
-      - key: WHATSAPP_APP_SECRET
         sync: false
       # Google Sheets — service account credentials
       - key: SPREADSHEET_ID

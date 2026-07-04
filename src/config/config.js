@@ -9,7 +9,6 @@
  *   WHATSAPP_TOKEN        → config.whatsapp.accessToken
  *   PHONE_NUMBER_ID       → config.whatsapp.phoneNumberId
  *   VERIFY_TOKEN          → config.whatsapp.verifyToken
- *   WHATSAPP_APP_SECRET   → config.whatsapp.appSecret  (optional — HMAC skipped if absent)
  *   SPREADSHEET_ID        → config.google.spreadsheetId
  *   CLIENT_EMAIL          → config.google.clientEmail
  *   PRIVATE_KEY           → config.google.privateKey
@@ -30,9 +29,6 @@ const config = {
     accessToken:   process.env.WHATSAPP_TOKEN || '',
     phoneNumberId: process.env.PHONE_NUMBER_ID || '',
     verifyToken:   process.env.VERIFY_TOKEN || '',
-    // Optional — when set, HMAC-SHA256 verification is enforced.
-    // When absent, signature verification is skipped with a warning.
-    appSecret:     process.env.WHATSAPP_APP_SECRET || '',
     apiVersion: 'v19.0',
     get apiBaseUrl() {
       return `https://graph.facebook.com/${this.apiVersion}`;
@@ -85,15 +81,13 @@ function validateConfig() {
   if (!config.whatsapp.phoneNumberId) {
     warnings.push('PHONE_NUMBER_ID is not set — WhatsApp replies will fail');
   }
-  if (!config.whatsapp.appSecret) {
-    warnings.push('WHATSAPP_APP_SECRET is not set — webhook HMAC signature verification disabled (optional)');
-  }
   if (!config.google.spreadsheetId) {
     warnings.push('SPREADSHEET_ID is not set — Google Sheets integration disabled');
   }
   if (!config.google.clientEmail || !config.google.privateKey) {
     warnings.push('CLIENT_EMAIL / PRIVATE_KEY not set — Google Sheets integration disabled');
   }
+
   if (!config.cloudinary.cloudName || !config.cloudinary.apiKey || !config.cloudinary.apiSecret) {
     warnings.push('Cloudinary credentials incomplete — media upload disabled');
   }

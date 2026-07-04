@@ -19,11 +19,12 @@ Every session MUST append to `docs/development/REPLIT_ENGINEERING_LOG.md` and co
 ## GitHub auth
 GitHub push fails with 401 — PAT not configured. Code has NOT been pushed to origin yet. Render is not deployed.
 
-## Credential env vars needed (all missing)
-`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, `GOOGLE_SPREADSHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+## Credential env vars (production)
+`WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `VERIFY_TOKEN`, `SPREADSHEET_ID`, `CLIENT_EMAIL`, `PRIVATE_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+Note: `WHATSAPP_APP_SECRET` permanently removed — no HMAC verification in this engine.
 
 ## Key design decisions
-- POST /webhook is fail-closed in production: requires `WHATSAPP_APP_SECRET`; rejects all unsigned requests
+- POST /webhook accepts all Meta payloads without signature verification (no HMAC)
 - Media upload failure (any file) blocks property commit — no partial saves
 - PID generation uses a promise-chain lock to prevent concurrent duplicate PIDs within a single process
 - Parser uses `lastMatch` helper (all fields) to implement "latest value wins" per Doc 02

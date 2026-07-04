@@ -22,10 +22,15 @@ const webhookRouter = require('./routes/webhook');
 
 const app = express();
 
-// JSON body parser for all routes except /webhook POST
-// (webhook POST uses express.raw for signature verification — handled in router)
+// JSON body parser for all routes except webhook POST routes.
+// Webhook POST handlers use express.raw() so they receive the raw Buffer
+// (needed for correct JSON parsing with express.raw).
+// Must exclude every path that the webhook router is mounted on.
+// Trailing-slash normalisation prevents /api/webhook/ bypassing the check.
+const WEBHOOK_PATHS = ['/webhook', '/api/webhook'];
 app.use((req, res, next) => {
-  if (req.path === '/webhook' && req.method === 'POST') {
+  const normalizedPath = req.path.replace(/\/+$/, '') || '/';
+  if (req.method === 'POST' && WEBHOOK_PATHS.includes(normalizedPath)) {
     return next(); // let webhook router handle raw body
   }
   express.json()(req, res, next);
@@ -44,8 +49,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// WhatsApp webhook
+// WhatsApp webhook — mounted at both /webhook and /api/webhook
+// Meta Developer Console is configured with /api/webhook path
 app.use('/webhook', webhookRouter);
+app.use('/api/webhook', webhookRouter);
 
 // Root
 app.get('/', (req, res) => {
@@ -53,9 +60,9 @@ app.get('/', (req, res) => {
     service: 'EasyFind Inventory Engine',
     status: 'running',
     endpoints: {
-      health: 'GET /health',
-      webhookVerify: 'GET /webhook',
-      webhookReceive: 'POST /webhook',
+      health:          'GET  /health',
+      webhookVerify:   'GET  /webhook  or  /api/webhook',
+      webhookReceive:  'POST /webhook  or  /api/webhook',
     },
   });
 });
@@ -75,7 +82,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 
 const PORT = config.port;
 
-const server = app.listen(PORT, '0.0.0.0', async () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info('═══════════════════════════════════════════');
   logger.info('  EasyFind Inventory Engine');
   logger.info(`  Environment : ${config.nodeEnv}`);
@@ -89,14 +96,6 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     warnings.forEach((w) => logger.warn(`  ⚠ ${w}`));
   } else {
     logger.info('All credentials configured ✓');
-  }
-
-  // Initialize inventory engine (loads drafts from Sheets, starts inactivity timer)
-  try {
-    const inventoryController = require('./inventory/inventoryController');
-    await inventoryController.initialize();
-  } catch (err) {
-    logger.error('Inventory engine initialization error', { error: err.message });
   }
 
   logger.info('Ready to receive WhatsApp webhooks');

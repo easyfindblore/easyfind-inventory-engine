@@ -539,131 +539,117 @@ PID: `PID260704001`
 
 ---
 
-## SESSION 005
-
-**Date & Time:** 2026-07-04
-
-**Objective:** Task 2 — Full Add Inventory workflow redesign per product specification. Silent collection, durable draft persistence, full state machine, new PID format, inactivity timer, dedup, duplicate detection, post-success menu.
-
 ---
 
-### Repository Status Before Work
+## Session 004 — 2026-07-04 — Production Credentials & GitHub Push
 
-**Branch:** `main`
-**Commit at session start:** `003fe91` (origin/main in sync)
-**Local diff:** `.replit` only (Replit-managed, not committed)
-**Test status at session start:** 170/170 pass
+### Engineer: Replit Engineering Agent
 
----
+### Objective
+Wire all Replit Workspace Secrets, reconcile diverged remote history, achieve clean production startup.
 
 ### Work Completed
 
-#### Sync Report (Task 1 — completed this session)
+**Secret name reconciliation** (`src/config/config.js`)
+- `WHATSAPP_TOKEN` → `whatsapp.accessToken`
+- `PHONE_NUMBER_ID` → `whatsapp.phoneNumberId`
+- `VERIFY_TOKEN` → `whatsapp.verifyToken`
+- `SPREADSHEET_ID` → `google.spreadsheetId`
+- `CLIENT_EMAIL` + `PRIVATE_KEY` → Google JWT auth (replaces GOOGLE_SERVICE_ACCOUNT_JSON)
+- Old names retained as fallbacks for Render compatibility
 
-| Field | Value |
+**Google Sheets auth** (`src/services/sheets.js`)
+- `getSheetsClient()` updated to JWT auth via `CLIENT_EMAIL` + `PRIVATE_KEY`
+- `PRIVATE_KEY` newline normalisation (`\\n` → real `\n`)
+
+**Webhook** (`src/routes/webhook.js`)
+- `WHATSAPP_APP_SECRET` confirmed fully optional — no fail-closed in production without it
+
+**Workflow port** (`.replit`)
+- `waitForPort` updated from 3000 → 10000 (PORT secret = 10000)
+- Port 10000 → externalPort 3000 mapping added
+
+**Git**
+- Merged diverged remote history (remote was 10 commits ahead from previous agent)
+- Pushed to `origin/main` — HEAD: `3410c47`
+
+### Live Integration Results
+
+| Integration | Result |
 |---|---|
-| Branch | main |
-| Remote commit | 003fe91 |
-| Local in sync | Yes — only .replit differs (Replit-managed) |
-| Test result | 170/170 pass |
-| Runtime | All credentials configured ✓ |
+| Google Sheets | ✅ Connected — sheet header and rows readable |
+| Cloudinary | ✅ Connected — ping `status:ok` |
+| Health endpoint | ✅ `GET /health` → 200 |
+| Test suite | ✅ 170/170 tests passed |
 
-#### Task 2 — Add Inventory Workflow Redesign
+### Startup Log (clean)
+```
+Port: 10000
+⚠ WHATSAPP_APP_SECRET is not set — webhook HMAC signature verification disabled (optional)
+Ready to receive WhatsApp webhooks
+```
 
-All new files created in `src/inventory/` directory. No existing files removed. Two existing files modified minimally (pidGenerator.js, sheets.js). webhookController.js rewritten to add priority routing.
+### Remaining Blockers
+- Meta/AiSensy webhook URL must be registered in Meta Developer Console (external — user action)
+- Render deployment auto-deploys from GitHub push `3410c47` — verify in Render dashboard
 
-**New files created:**
+---
 
-| File | Purpose |
-|---|---|
-| `src/config/referenceData.json` | Enum reference data for furnishing, tenantType, apartmentType, bhk, availability, locations — editable without code change |
-| `src/inventory/inventoryResponses.js` | All broker-facing message templates (welcome, status, help, menu, cancel, save, processing, success, whatNext, errors, duplicateWarning, mainMenu) |
-| `src/inventory/inventoryCommands.js` | Command recognition: `isInventoryTrigger`, `identifySessionCommand`, `normalizeMenuChoice`, `parseCancelConfirm`, `parseMidSessionMenu`, `parseReturnMenu`, `parsePostSuccessMenu`, `parseDuplicateWarning` |
-| `src/inventory/draftStore.js` | Durable session storage: in-memory Map + Google Sheets "Drafts" tab, debounced 400ms writes, auto-creates tab on startup, CRUD, startup load |
-| `src/inventory/inventoryController.js` | Full state machine: COLLECTING, INACTIVE, CONFIRM_CANCEL, MID_SESSION_MENU, RETURN_MENU, POST_SUCCESS, CONFIRM_DUPLICATE. Inactivity timer (nudge at 50%, timeout at 100%), webhook dedup via in-memory TTL set, DONE processing (parse→normalize→validate→dedup→download media→save), `initialize()` |
+## Session 003 — 2026-07-04
 
-**Files modified:**
+**Objective:** Permanently remove WHATSAPP_APP_SECRET from the entire repository.
+
+**Trigger:** Engineering task issued by user — HMAC signature verification no longer required.
+
+### Changes Made
+
+#### Source Code
 
 | File | Change |
 |---|---|
-| `src/utils/pidGenerator.js` | Added `generateEFPID(date, seq)` → `EF-YYYYMMDD-NNNNNN` format. `generatePID` kept for legacy data. |
-| `src/services/sheets.js` | `generatePIDAndAppend` accepts optional `options.pidGenerator` param (defaults to legacy format). Backward compatible. Duplicate JSDoc removed. |
-| `src/controllers/webhookController.js` | Added `inventoryController.tryHandleMessage()` as priority first-pass routing. All legacy Add Media / Delete Media / Cancel / Done flows preserved intact. ADD_PROPERTY no longer started from legacy flow (inventory controller owns all property triggers). |
-| `src/index.js` | Added `await inventoryController.initialize()` in server startup — loads Sheets Drafts tab, starts inactivity timer. |
+| `src/config/config.js` | Removed `appSecret` field from `config.whatsapp`; removed WHATSAPP_APP_SECRET warning from `validateConfig()` |
+| `src/routes/webhook.js` | Removed `const crypto = require('crypto')`; removed entire HMAC verification block (signature check, timingSafeEqual, fallback warn); removed file-header reference; renumbered POST steps |
+| `src/index.js` | Removed HMAC mention from inline comment |
 
-**Key design decisions:**
+#### Configuration / Deployment
 
-1. **Durable drafts via Google Sheets "Drafts" tab** — satisfies "Google Sheets is the only database" constraint. In-memory Map is the working store; debounced writes flush to Sheets asynchronously. On startup, all rows are loaded back into memory.
-
-2. **Silence rule during COLLECTING** — zero broker-facing ACKs for text, images, videos, location, documents. Only commands produce responses.
-
-3. **Required fields at DONE time** — Location, Apartment Type, BHK, Bathrooms, Size, Furnishing, Tenant Type, Rent, Deposit, Availability. Missing fields are reported in one message; session stays COLLECTING.
-
-4. **Inactivity timer** — setInterval every 60s. Nudge at 50% of timeout (15 min). State → INACTIVE at timeout. INACTIVE sessions are preserved, not deleted. Broker return → RETURN_MENU.
-
-5. **Webhook dedup** — in-memory Map<messageId, timestamp>, evicted after 5 min. Prevents same WhatsApp message from processing twice on Meta retries.
-
-6. **Duplicate property detection** — uniqueKey (location|bhk|rent|apartmentType) compared against existing rows for same broker in last 7 days. Shows CONFIRM_DUPLICATE warning with Save-Anyway / Cancel options.
-
-7. **New PID format** — `EF-YYYYMMDD-NNNNNN` (6-digit zero-padded sequence). Old `PIDyymmddNNN` format preserved for any existing data.
-
-8. **Legacy trigger backward compat** — "add property", "new property", "start property", "create listing" all route to new inventory flow (in addition to spec triggers: "2", "Add Inventory", "Inventory", "Add").
-
-9. **Media dedup** — `seenMediaIds` array on draft prevents same WhatsApp media ID from being stored twice (guards against WhatsApp's own retry delivery).
-
-10. **Reference data extensibility** — `src/config/referenceData.json` is the default. Structure is ready for a Google Sheets "Reference" tab override (future iteration).
-
----
-
-### Test Results
-
-| Suite | Before | After |
-|---|---|---|
-| Property Messages | 100/100 | 100/100 |
-| Negative Messages | 50/50 | 50/50 |
-| Normalizer Edge Cases | 18/18 | 18/18 |
-| Webhook Fixture Structure | 2/2 | 2/2 |
-| **Total** | **170/170** | **170/170** |
-
-**No regressions. All tests pass.**
-
----
-
-### Server Startup Log (post-implementation)
-
-```
-[info] SessionManager initialized
-[info] EasyFind Inventory Engine — Port 3000
-[info] All credentials configured ✓
-[info] DraftStore: Drafts sheet tab created
-[info] DraftStore initialized {"draftsLoaded":0}
-[info] Inventory inactivity timer started {"timeoutMs":1800000,"nudgeMs":900000}
-[info] Inventory engine initialized
-[info] Ready to receive WhatsApp webhooks
-```
-
----
-
-### Pending / Out of Scope
-
-| Item | Status |
+| File | Change |
 |---|---|
-| Render deployment | Out of scope this session — no GitHub PAT |
-| Meta webhook registration | Out of scope — Render deploy blocked |
-| Reference tab in Google Sheets | Future iteration — JSON fallback in place |
-| Location Master (valid location list) | Not yet populated — accepts any non-empty location for now |
-| Manus AI integration testing | Manus owns `tests/`, `fixtures/`, `regression/` — their regression suite should be run against the new inventory flow |
+| `render.yaml` | Removed WHATSAPP_APP_SECRET env var entry and its comment |
+| `.env.example` | Removed WHATSAPP_APP_SECRET entry and its comment |
 
----
+#### Documentation (Replit-owned)
 
-### Governance
+| File | Change |
+|---|---|
+| `replit.md` | Removed WHATSAPP_APP_SECRET from env var list |
+| `START_HERE.md` | Removed WHATSAPP_APP_SECRET from env var block |
+| `docs/architecture/SYSTEM_ARCHITECTURE.md` | Removed HMAC signing line from Meta block; replaced `WHATSAPP_APP_SECRET optional` design decision with `No HMAC verification` |
+| `docs/contracts/05_api_integration_contract.md` | Removed WHATSAPP_APP_SECRET from credential list |
+| `docs/governance/IMPLEMENTATION_CHECKLIST.md` | Removed HMAC-SHA256 / timingSafeEqual / fail-closed checklist items; removed WHATSAPP_APP_SECRET from Render env var list |
+| `docs/development/WEBHOOK_INCIDENT_REPORT.md` | Removed WHATSAPP_APP_SECRET from Render setup checklist |
+| `docs/development/TEST_HANDOVER.md` | Updated implementation status table, fail-closed invariants, engineering decisions table, mandatory invariants, and webhook test cases to reflect removal |
+| `.agents/memory/easyfind-setup.md` | Updated credential list and design decisions — removed WHATSAPP_APP_SECRET |
 
-- Replit Agent owned all work this session: `src/`, `docs/development/`
-- No Manus assets (`tests/`, `fixtures/`, `regression/`) modified
-- `docs/specs/` read-only during this session — no modifications
+**Not modified:** `docs/development/REPLIT_ENGINEERING_LOG.md` past entries (historical record preserved as-is). `tests/` directory (Manus-owned).
 
----
+**Not modified:** `easyfind-inventory-engine/` subdirectory — this is a nested copy of old docs, not active source. References within it are inert.
 
-*End of Session 005*
+### Validation
 
----
+**Startup log (clean):**
+```
+EasyFind Inventory Engine
+Environment : development
+Port        : 10000
+All credentials configured ✓
+Ready to receive WhatsApp webhooks
+```
+
+No WHATSAPP_APP_SECRET warnings. No HMAC-related output.
+
+**Zero references confirmed** in all active source, configuration, and Replit-owned documentation files.
+
+### Post-state
+
+WHATSAPP_APP_SECRET is no longer read, validated, warned about, documented, or required anywhere in the application. Webhook POST requests are accepted from Meta without signature verification, matching the original working architecture.

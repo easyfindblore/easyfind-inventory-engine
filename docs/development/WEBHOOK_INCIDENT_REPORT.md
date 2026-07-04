@@ -115,7 +115,6 @@ Complete application rebuilt from scratch using the 10 authoritative specificati
 - [ ] Set `WHATSAPP_ACCESS_TOKEN` in Render
 - [ ] Set `WHATSAPP_PHONE_NUMBER_ID` in Render
 - [ ] Set `WHATSAPP_VERIFY_TOKEN` in Render
-- [ ] Set `WHATSAPP_APP_SECRET` in Render
 - [ ] Set `GOOGLE_SPREADSHEET_ID` in Render
 - [ ] Set `GOOGLE_SERVICE_ACCOUNT_JSON` in Render
 - [ ] Set `CLOUDINARY_CLOUD_NAME` in Render

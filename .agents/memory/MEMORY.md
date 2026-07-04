@@ -1,2 +1,2 @@
 - [EasyFind project setup](easyfind-setup.md) — docs-only repo on import; all code built from specs in Session 001; GitHub push blocked until PAT configured.
-- [Inventory engine architecture](inventory-engine.md) — new Add Inventory flow lives in src/inventory/; routing priority: inventoryController first, then legacy Add Media flow.
+- [Replit npm registry vs external builds](replit-registry.md) — package-lock.json baked with Replit internal URLs breaks Render npm install.

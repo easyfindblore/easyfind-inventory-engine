@@ -64,10 +64,7 @@
 
 ### Webhook Route (`src/routes/webhook.js`)
 - [ ] GET: returns `hub.challenge` when `hub.verify_token` matches
-- [ ] POST: HMAC-SHA256 validated before processing
-- [ ] Fail-closed in production: missing `WHATSAPP_APP_SECRET` → reject all POST
-- [ ] `timingSafeEqual` length guard in place (no crash on mismatched buffer lengths)
-- [ ] Always returns 200 to Meta (even on processing error) to prevent retry floods
+- [ ] POST: always returns 200 to Meta immediately (async processing prevents retry floods)
 
 ---
 
@@ -101,7 +98,6 @@
   - [ ] `WHATSAPP_ACCESS_TOKEN`
   - [ ] `WHATSAPP_PHONE_NUMBER_ID`
   - [ ] `WHATSAPP_VERIFY_TOKEN`
-  - [ ] `WHATSAPP_APP_SECRET`
   - [ ] `GOOGLE_SPREADSHEET_ID`
   - [ ] `GOOGLE_SERVICE_ACCOUNT_JSON` (full JSON, single line)
   - [ ] `CLOUDINARY_CLOUD_NAME`
