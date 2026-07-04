@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyFind — Search Response &amp; Gallery Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F2EA;
+    --ink:#232620;
+    --ink-soft:#5B5A50;
+    --green:#14453D;
+    --green-soft:#DCE6E1;
+    --brick:#A85C3E;
+    --line:#DED6C4;
+    --card:#FFFDF8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Inter',sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 24px 120px;}
+  .intro{max-width:640px;margin-bottom:64px;}
+  .eyebrow{
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--green);font-weight:600;margin-bottom:10px;
+  }
+  .intro h1{font-size:38px;font-weight:500;margin:0 0 14px;line-height:1.15;}
+  .intro p{color:var(--ink-soft);font-size:16px;margin:0;}
+
+  .section-title{display:flex;align-items:baseline;gap:14px;margin:0 0 28px;}
+  .section-title h2{font-size:24px;font-weight:500;margin:0;}
+  .section-title .rule{flex:1;height:1px;background:var(--line);}
+  .section-title span.tag{
+    font-size:12px;color:var(--ink-soft);border:1px solid var(--line);
+    padding:4px 10px;border-radius:100px;
+  }
+
+  /* ===== PHONE MOCKUP ===== */
+  .phone-row{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:100px;}
+  .phone{
+    width:340px;background:#0F1210;border-radius:38px;padding:12px;
+    box-shadow:0 30px 60px -20px rgba(20,69,61,.35);
+    flex-shrink:0;
+  }
+  .phone-screen{
+    background:#EAE6DC;border-radius:28px;overflow:hidden;
+    height:660px;display:flex;flex-direction:column;
+  }
+  .chat-header{
+    background:var(--green);color:#fff;padding:16px 18px;
+    display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;
+  }
+  .chat-header .dot{width:8px;height:8px;border-radius:50%;background:#7CD9BE;}
+  .chat-body{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px;}
+  .bubble{
+    max-width:82%;padding:10px 13px;border-radius:14px;font-size:13.5px;
+  }
+  .bubble.user{align-self:flex-end;background:var(--green);color:#fff;border-bottom-right-radius:4px;}
+  .bubble.bot{align-self:flex-start;background:#fff;color:var(--ink);border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+
+  .carousel{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 6px;align-self:flex-start;max-width:100%;}
+  .prop-card{
+    min-width:190px;background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,.08);flex-shrink:0;
+  }
+  .prop-card img{width:100%;height:110px;object-fit:cover;display:block;}
+  .prop-card .pc-body{padding:9px 10px 11px;}
+  .prop-card .pc-title{font-size:12.5px;font-weight:600;margin:0 0 2px;}
+  .prop-card .pc-price{font-family:'Fraunces',serif;font-size:15px;color:var(--brick);font-weight:600;margin:0 0 4px;}
+  .prop-card .pc-highlight{font-size:10.5px;color:var(--ink-soft);margin:0 0 8px;line-height:1.35;}
+  .pc-ctas{display:flex;gap:6px;}
+  .pc-ctas button{
+    flex:1;font-size:10px;font-weight:600;border:none;border-radius:8px;
+    padding:6px 4px;font-family:'Inter',sans-serif;cursor:pointer;
+  }
+  .pc-ctas .primary{background:var(--green);color:#fff;}
+  .pc-ctas .secondary{background:var(--green-soft);color:var(--green);}
+  .pagination-note{align-self:flex-start;font-size:11.5px;color:var(--ink-soft);padding:0 6px;}
+
+  .chat-input{
+    background:#fff;padding:10px 14px;border-top:1px solid #ddd;
+    font-size:12px;color:#999;
+  }
+
+  .phone-caption{margin-top:18px;max-width:340px;}
+  .phone-caption h3{font-size:15px;margin:0 0 6px;}
+  .phone-caption p{font-size:13px;color:var(--ink-soft);margin:0;}
+
+  /* ===== GALLERY PAGE MOCKUP ===== */
+  .browser-frame{
+    border-radius:20px;border:1px solid var(--line);overflow:hidden;
+    background:#fff;box-shadow:0 40px 80px -30px rgba(35,38,32,.25);
+  }
+  .browser-bar{
+    background:#EDEAE0;padding:10px 16px;display:flex;align-items:center;gap:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .browser-bar .dot2{width:9px;height:9px;border-radius:50%;background:#D8D2C4;}
+  .browser-bar .url{
+    margin-left:10px;font-size:11px;color:var(--ink-soft);
+    background:#fff;border-radius:6px;padding:4px 10px;flex:1;max-width:340px;
+  }
+
+  .hero{position:relative;height:420px;overflow:hidden;}
+  .hero img{width:100%;height:100%;object-fit:cover;}
+  .hero-chip{
+    position:absolute;top:24px;left:24px;background:rgba(20,69,61,.92);color:#fff;
+    padding:7px 14px;border-radius:100px;font-size:12.5px;font-weight:600;
+    letter-spacing:.02em;
+  }
+  .hero-price-chip{
+    position:absolute;bottom:24px;left:24px;background:#fff;color:var(--ink);
+    padding:14px 20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .hero-price-chip .p{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--brick);}
+  .hero-price-chip .sub{font-size:12px;color:var(--ink-soft);}
+
+  .content-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:44px;padding:36px 40px 50px;}
+  .col-title{font-size:26px;font-weight:500;margin:0 0 6px;}
+  .col-sub{color:var(--ink-soft);font-size:14px;margin:0 0 22px;}
+
+  .thumb-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:28px;}
+  .thumb-row img{width:100%;height:70px;object-fit:cover;border-radius:8px;}
+  .room-strip{display:flex;gap:8px;margin:-16px 0 24px;flex-wrap:wrap;}
+  .room-chip{font-size:11.5px;padding:5px 12px;border:1px solid var(--line);border-radius:100px;color:var(--ink-soft);}
+  .room-chip.active{background:var(--green);color:#fff;border-color:var(--green);}
+
+  .overview{font-size:15px;color:var(--ink);margin-bottom:26px;line-height:1.6;}
+
+  .facts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px;margin-bottom:28px;}
+  .fact{border-bottom:1px solid var(--line);padding-bottom:10px;}
+  .fact .k{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+  .fact .v{font-size:14.5px;font-weight:600;}
+
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+  .tag{background:var(--green-soft);color:var(--green);font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:100px;}
+
+  .loc-block{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+  .loc-block h4{margin:0 0 10px;font-size:14px;}
+  .loc-item{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-soft);padding:5px 0;border-top:1px dashed var(--line);}
+  .loc-item:first-of-type{border-top:none;}
+
+  .side-card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px;position:sticky;top:24px;
+  }
+  .side-card .p{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--brick);margin-bottom:4px;}
+  .side-card .p .per{font-size:13px;color:var(--ink-soft);font-family:'Inter',sans-serif;font-weight:500;}
+  .side-card .society{font-size:13px;color:var(--ink-soft);margin-bottom:18px;}
+  .cta-primary{
+    display:block;width:100%;background:var(--green);color:#fff;text-align:center;
+    padding:13px;border-radius:10px;font-weight:600;font-size:14px;border:none;
+    margin-bottom:10px;cursor:pointer;
+  }
+  .cta-secondary{
+    display:block;width:100%;background:transparent;color:var(--green);text-align:center;
+    padding:13px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid var(--green);
+    cursor:pointer;
+  }
+  .side-note{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:12px;}
+
+  .related-strip{padding:0 40px 40px;}
+  .related-strip h3{font-size:16px;margin:0 0 14px;}
+  .related-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .r-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .r-card img{width:100%;height:110px;object-fit:cover;}
+  .r-card .rb{padding:10px 12px;}
+  .r-card .rp{font-family:'Fraunces',serif;color:var(--brick);font-weight:600;font-size:15px;}
+  .r-card .rl{font-size:11.5px;color:var(--ink-soft);}
+
+  .footnote{max-width:640px;margin-top:36px;font-size:13px;color:var(--ink-soft);}
+  .footnote strong{color:var(--ink);}
+
+  @media(max-width:900px){
+    .content-grid{grid-template-columns:1fr;}
+    .related-row{grid-template-columns:1fr 1fr;}
+    .side-card{position:static;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="intro">
+    <div class="eyebrow">EasyFind Property Solutions</div>
+    <h1>Search response &amp; gallery — how it should feel</h1>
+    <p>Two real surfaces, shown with your actual listings (Vista Lagos, SJR Verity, Bren Champion Square). Not code — this is what a customer sees.</p>
+  </div>
+
+  <!-- ============ SECTION 0: ENTRY MENU ============ -->
+  <div class="section-title">
+    <h2>0. Entry menu — the one thing that changes for everyone</h2>
+    <div class="rule"></div>
+    <span class="tag">Add ↔ Search, same door, never mingled</span>
+  </div>
+
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="chat-header"><span class="dot"></span> EasyFind</div>
+          <div class="chat-body">
+            <div class="bubble user">Hi</div>
+            <div class="bubble bot">🏠 <strong>Welcome to EasyFind!</strong><br><br>What would you like to do?<br><br>1️⃣ Search Property<br>2️⃣ Add Inventory<br><br>Just type 1 or 2, or say what you're looking for.</div>
+          </div>
+          <div class="chat-input">Type a message</div>
+        </div>
+      </div>
+      <div class="phone-caption">
+        <h3>Today it only offers "Add Inventory"</h3>
+        <p>The fix is one line of copy — Search and Add sit side by side as two doors into the same house, but everything behind each door stays fully separate.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="chat-header"><span class="dot"></span> EasyFind</div>
+          <div class="chat-body">
+            <div class="bubble user">2bhk bellandur under 55k</div>
+            <div class="bubble bot">On it — let's see what's around Bellandur for a 2BHK, under ₹55,000 👀</div>
+          </div>
+          <div class="chat-input">Type a message</div>
+        </div>
+      </div>
+      <div class="phone-caption">
+        <h3>Skipping the menu is fine too</h3>
+        <p>A customer who states what they need directly goes straight to search — the numbered menu is a fallback for "hi", not a mandatory first step.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 1: WHATSAPP RESPONSE ============ -->
+  <div class="section-title">
+    <h2>1. Search response on WhatsApp</h2>
+    <div class="rule"></div>
+    <span class="tag">3 cards · 2 messages each · pagination</span>
+  </div>
+
+  <div class="phone-row">
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="chat-header"><span class="dot"></span> EasyFind</div>
+          <div class="chat-body">
+            <div class="bubble user">2BHK near Bellandur under 60k</div>
+            <div class="bubble bot">On it — let's see what's around Bellandur for a 2BHK 👀</div>
+            <div class="bubble bot">Found 6 places. Here are the top 3:</div>
+
+            <div class="carousel">
+              <div class="prop-card">
+                <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150972/inventory/inventory/EF-20260704-000002_img001.jpg" alt="Vista Lagos">
+                <div class="pc-body">
+                  <p class="pc-title">3 BHK · Yemalur</p>
+                  <p class="pc-price">₹65,000/mo</p>
+                  <p class="pc-highlight">Fully furnished, gated, ready Aug 1</p>
+                  <div class="pc-ctas"><button class="primary">Contact Now</button><button class="secondary">Details</button></div>
+                </div>
+              </div>
+              <div class="prop-card">
+                <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783151319/inventory/inventory/EF-20260704-000003_img001.jpg" alt="SJR Verity">
+                <div class="pc-body">
+                  <p class="pc-title">2 BHK · Kasavanahalli</p>
+                  <p class="pc-price">₹57,000/mo</p>
+                  <p class="pc-highlight">Pets allowed, gated community</p>
+                  <div class="pc-ctas"><button class="primary">Contact Now</button><button class="secondary">Details</button></div>
+                </div>
+              </div>
+              <div class="prop-card">
+                <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783152178/inventory/inventory/EF-20260704-000006_img001.jpg" alt="Bren Champion Square">
+                <div class="pc-body">
+                  <p class="pc-title">3 BHK · Sarjapur Road</p>
+                  <p class="pc-price">₹73,000/mo</p>
+                  <p class="pc-highlight">Fully furnished, move in 25th July</p>
+                  <div class="pc-ctas"><button class="primary">Contact Now</button><button class="secondary">Details</button></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pagination-note">That's 3 of 6 — reply "more" for the next 3.</div>
+          </div>
+          <div class="chat-input">Type a message</div>
+        </div>
+      </div>
+      <div class="phone-caption">
+        <h3>Found: 3 cards, honest 1-liners, two clear actions</h3>
+        <p>Each card gets its <em>own</em> reason to like it — not the same three adjectives repeated. "Contact Now" captures the lead; "Details" opens the full gallery (section 2).</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="chat-header"><span class="dot"></span> EasyFind</div>
+          <div class="chat-body">
+            <div class="bubble user">3BHK independent house Indiranagar under 20k</div>
+            <div class="bubble bot">Nothing at that budget in Indiranagar right now — independent houses there usually start higher.</div>
+            <div class="bubble bot">I'll message you the moment one comes up. Want me to show similar 3BHKs nearby, or in a slightly higher budget?</div>
+          </div>
+          <div class="chat-input">Type a message</div>
+        </div>
+      </div>
+      <div class="phone-caption">
+        <h3>No match: honest, and never a dead end</h3>
+        <p>States it plainly, promises a real follow-up (and keeps that promise), and immediately offers a next step instead of leaving the thread hanging.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2: GALLERY PAGE ============ -->
+  <div class="section-title">
+    <h2>2. Property gallery page</h2>
+    <div class="rule"></div>
+    <span class="tag">Vista Lagos · Yemalur</span>
+  </div>
+
+  <div class="browser-frame">
+    <div class="browser-bar">
+      <span class="dot2"></span><span class="dot2"></span><span class="dot2"></span>
+      <span class="url">easyfindautomation.onrender.com/api/gallery/EF-20260704-000002</span>
+    </div>
+
+    <div class="hero">
+      <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150972/inventory/inventory/EF-20260704-000002_img001.jpg" alt="Vista Lagos hero">
+      <div class="hero-chip">Gated Community</div>
+      <div class="hero-price-chip">
+        <div class="p">₹65,000<span style="font-size:14px;color:var(--ink-soft);font-family:'Inter',sans-serif;">/mo</span></div>
+        <div class="sub">+ ₹5,600 maintenance · ₹3,90,000 deposit</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div>
+        <h2 class="col-title">Fully Furnished 3 BHK</h2>
+        <p class="col-sub">Vista Lagos · Yemalur, Bangalore</p>
+
+        <div class="thumb-row">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150972/inventory/inventory/EF-20260704-000002_img001.jpg">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150973/inventory/inventory/EF-20260704-000002_img002.jpg">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150973/inventory/inventory/EF-20260704-000002_img003.jpg">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150974/inventory/inventory/EF-20260704-000002_img004.jpg">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783150974/inventory/inventory/EF-20260704-000002_img005.jpg">
+        </div>
+        <div class="room-strip">
+          <span class="room-chip active">All photos</span>
+          <span class="room-chip">Living</span>
+          <span class="room-chip">Kitchen</span>
+          <span class="room-chip">Bedrooms</span>
+          <span class="room-chip">Balcony</span>
+        </div>
+
+        <p class="overview">A bright, fully furnished 3 BHK in Vista Lagos — a gated community on Yemalur's quieter side, close to the ORR tech corridor. Ready from 1 August, with 3 bathrooms and a private balcony.</p>
+
+        <div class="facts-grid">
+          <div class="fact"><div class="k">Configuration</div><div class="v">3 BHK</div></div>
+          <div class="fact"><div class="k">Bathrooms</div><div class="v">3</div></div>
+          <div class="fact"><div class="k">Size</div><div class="v">1,730 sqft</div></div>
+          <div class="fact"><div class="k">Floor</div><div class="v">Ground / 5</div></div>
+          <div class="fact"><div class="k">Furnishing</div><div class="v">Fully Furnished</div></div>
+          <div class="fact"><div class="k">Available from</div><div class="v">1 August 2026</div></div>
+        </div>
+
+        <div class="tags">
+          <span class="tag">Gated Community</span>
+          <span class="tag">Utility area</span>
+          <span class="tag">Any tenant welcome</span>
+        </div>
+
+        <div class="loc-block">
+          <h4>Around Yemalur</h4>
+          <div class="loc-item"><span>Ecospace Business Park</span><span>1.4 km</span></div>
+          <div class="loc-item"><span>Marathahalli Bridge</span><span>2.1 km</span></div>
+          <div class="loc-item"><span>Vydehi Hospital</span><span>3.0 km</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="side-card">
+          <div class="p">₹65,000<span class="per"> /mo</span></div>
+          <div class="society">Vista Lagos, Yemalur</div>
+          <button class="cta-primary">Contact Now</button>
+          <button class="cta-secondary">Chat on WhatsApp</button>
+          <div class="side-note">A team member usually replies within a few hours</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="related-strip">
+      <h3>Similar places nearby</h3>
+      <div class="related-row">
+        <div class="r-card">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783151847/inventory/inventory/EF-20260704-000005_img002.jpg">
+          <div class="rb"><div class="rp">₹2,00,000/mo</div><div class="rl">3 BHK · Ambalipura, Harlur</div></div>
+        </div>
+        <div class="r-card">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783152076/inventory/inventory/EF-20260704-000005_img001.jpg">
+          <div class="rb"><div class="rp">₹67,000/mo</div><div class="rl">3 BHK · Harlur</div></div>
+        </div>
+        <div class="r-card">
+          <img src="https://res.cloudinary.com/dcvwsclyc/image/upload/v1783152684/inventory/inventory/EF-20260704-000010_img001.jpg">
+          <div class="rb"><div class="rp">₹65,000/mo</div><div class="rl">3 BHK · Sarjapur Road</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <strong>Why it looks like this:</strong> warm paper background and a deep garden-green accent instead of WhatsApp's own green or a generic real-estate red — this is meant to feel like a trusted local consultant, not a portal. The serif numerals on price are the one deliberately "premium" flourish; everything else stays quiet so the photos and facts do the work, the same restraint Airbnb and good real-estate sites use.
+  </div>
+
+  <div class="footnote">
+    <strong>One technical honesty note:</strong> each card above renders as one visual block here, but on real WhatsApp (Meta Cloud API, no product catalog connected) it's actually two back-to-back messages per property — an image with a caption, then a small reply-buttons message with "Contact Now" / "More Details." There's no native swipeable carousel available without setting up a separate Meta Commerce catalog, which is out of scope for this build. Sent quickly in sequence, it reads the same to the customer as what's mocked up here.
+  </div>
+
+</div>
+</body>
+</html>
