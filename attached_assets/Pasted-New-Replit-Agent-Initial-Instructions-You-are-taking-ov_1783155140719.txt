@@ -1,0 +1,202 @@
+New Replit Agent — Initial Instructions
+
+You are taking over an existing production project.
+
+Phase 1 — Synchronize Only
+
+Before doing anything else:
+
+1. Synchronize the workspace with the latest GitHub repository.
+2. Confirm:
+    * Current branch
+    * Current HEAD commit
+    * Latest remote commit
+    * Workspace is fully synchronized
+3. Resolve any divergence safely.
+4. Do not discard work.
+5. Do not create new commits during this phase.
+6. Ensure the workspace builds successfully.
+7. Verify the application starts successfully.
+
+When synchronization is complete, report:
+
+* Branch
+* Local commit SHA
+* Remote commit SHA
+* Workspace synchronized (Yes/No)
+
+Stop if synchronization cannot be completed.
+
+⸻
+
+Phase 2 — Understand Existing Implementation
+
+Do not modify any code yet.
+
+Read the existing implementation and identify:
+
+* Inventory workflow
+* Property parser
+* Validation pipeline
+* Google Sheets mapping
+* LOV mapping
+* Media handling
+* Draft persistence
+
+Understand the architecture before making changes.
+
+⸻
+
+Phase 3 — Scope Lock
+
+You are authorized to modify ONLY the Inventory parsing and Inventory-to-Google-Sheets mapping logic required to fix the issues listed below.
+
+Do NOT modify:
+
+* Search workflow
+* Search routes
+* Search prompts
+* Search session management
+* Search UI
+* WhatsApp webhook flow
+* Session architecture
+* Draft persistence
+* Image handling
+* Media upload pipeline
+* Cloudinary integration
+* Google Sheets infrastructure
+* Authentication
+* Configuration
+* Deployment
+* Build system
+* Tests unrelated to Inventory parsing
+
+If you believe any of those components require changes, stop and explain why before making them.
+
+⸻
+
+Phase 4 — Fix Only These Issues
+
+Fix only the following problems.
+
+1. Property Location (Column C)
+
+* Strip markdown formatting.
+* Normalize input.
+* Match against the Location LOV.
+* Ignore formatting characters.
+* Never fail because text contains bold, punctuation or spacing.
+
+⸻
+
+2. Society Name (Column E)
+
+This is the highest priority issue.
+
+Requirements:
+
+* Never store a Google Maps URL.
+* Detect society names reliably.
+* Store gated community names.
+* Store semi-gated apartment names when present.
+* Leave blank for standalone properties.
+
+⸻
+
+3. Bathrooms and Balcony columns
+
+Improve extraction reliability.
+
+Support common wording variations.
+
+⸻
+
+4. Tenant Type (Column M)
+
+Normalize before matching the LOV.
+
+Handle aliases.
+
+Never fail because of formatting.
+
+⸻
+
+5. Vegetarian Restriction
+
+Business rule:
+
+Only populate “Vegetarian” if the broker explicitly mentions:
+
+* Vegetarian
+* Vegetarian Only
+* Veg Only
+* Vegetarian Family
+
+If the word “Vegetarian” never appears,
+
+treat it as
+
+No Restriction.
+
+Never infer Vegetarian.
+
+⸻
+
+Do NOT Change
+
+Do not redesign the Inventory conversation.
+
+Do not change menus.
+
+Do not change message wording.
+
+Do not change session behaviour.
+
+Do not change image handling.
+
+Do not change media handling.
+
+Do not change successful features.
+
+Do not refactor unrelated code.
+
+Do not perform “cleanup.”
+
+Do not optimize unrelated modules.
+
+Keep the implementation as small and isolated as possible.
+
+⸻
+
+Before Coding
+
+Present:
+
+* Root cause for each issue.
+* Files that will be modified.
+* Why those files need changes.
+
+Wait for your own verification that the scope is limited to the issues above.
+
+Only then begin implementation.
+
+⸻
+
+After Implementation
+
+Run regression tests.
+
+Verify that:
+
+* Existing working behaviour remains unchanged.
+* Images still work.
+* Media still works.
+* Draft persistence still works.
+* Search still works.
+
+Finally provide:
+
+* Files modified
+* Root cause of each issue
+* Tests executed
+* Confirmation that only the requested areas were changed.

@@ -728,3 +728,65 @@ Because `git pull` is sandbox-blocked, use the GitHub API approach:
 - Ask the user to create a fresh checkpoint which will pull from origin
 
 See `docs/development/WORKSPACE_SYNC_INCIDENT.md` for full detail and the recommended first-action protocol.
+
+---
+
+## SESSION 005
+
+**Date & Time:** 2026-07-04
+
+**Objective:** Two-agent model takeover — fix five specific parsing/normalization bugs reported for the inventory engine, scope-locked to `src/parser/messageParser.js` and `src/normalizer/normalizer.js` only.
+
+---
+
+### Pre-Work Verification
+
+- Confirmed `main` local and remote both at `f2d551eb43383da5856c7877a85841c23d68951b`, fully synced.
+- Baseline `npm test`: 170/170 passed. `/health` returned 200.
+- Read `messageParser.js`, `normalizer.js`, `inventoryController.js`, `sheets.js`, `referenceData.json`, and the Column Contract / Mapping Rules docs to ground root causes in the actual implementation before touching anything.
+
+### Scope Lock
+
+Modified **only**:
+- `src/parser/messageParser.js`
+- `src/normalizer/normalizer.js`
+
+No changes to search, WhatsApp webhook flow, session management, draft persistence, media/Cloudinary, Sheets infra, auth, config, deployment, or any file owned by Manus AI (`tests/`, `fixtures/`, `regression/`).
+
+### Bugs Fixed (root cause confirmed against real fixtures before coding)
+
+1. **Property Location — markdown leakage.** No markdown-stripping step existed anywhere in the pipeline, so `**Location:** *Bellandur*` stored the literal asterisks. Fix: parser now builds its internal matching copy of the text with markdown formatting characters (`*`, `_`, backtick) replaced by spaces before any regex runs; `rawMessage` is untouched.
+
+2. **Society Name — URL leakage (highest priority).** Three distinct causes, each confirmed against a fixture:
+   - `property_message_090.md`: `Society: Sobha Dream Acres. Link: https://maps.app.goo.gl/...` — the capture wasn't bounded at a sentence-ending period, so the trailing Maps link ran straight into the society name. Fixed by bounding the regex at `.`/`,`/newline and adding a `cleanSocietyCapture()` helper that cuts off at any embedded URL or `Link:`/`Map:` fragment.
+   - `property_message_005.md`: `Society/Landmark: Opposite Decathlon` under a Gated Community was stored as a society name because the landmark-exclusion check in the normalizer only ran when `apartmentType === 'Stand Alone'`. Fixed to apply the landmark check unconditionally.
+   - `property_message_001.md`: `Prestige Lakeside Habitat` mentioned with no `Society:`/`Landmark:` label was never captured. Added a narrow fallback regex matching a curated list of known builder/developer name prefixes, used only when no labeled society value was found.
+   - Added a URL-pattern guard directly in `normalizeSocietyName()` as defense-in-depth.
+
+3. **Bathrooms / Balcony — extraction reliability.** Confirmed against 12+ fixtures (`property_message_004`, `005`, `010`, etc.): the existing regex only matched value-first order (`2 Bathrooms`) and missed the common label-first markdown format (`**Bathrooms** 2`, `**Balcony** 1`). Added label-first patterns for both fields and now combine matches from both pattern forms, picking whichever occurs latest in the message (per the existing "latest value wins" rule).
+
+4. **Tenant Type — "Preferred" required.** The regex required the literal word "preferred", failing 43 of the 100 property fixtures that use plain `Tenant: Anyone` with no "Preferred". Made "preferred" optional and bounded the capture at a period/comma (not just newline) so single-line messages like `Tenant: Anyone. Pets: Yes.` no longer swallow the trailing field.
+
+5. **Vegetarian Restriction — missing aliases and no default.** The regex was missing bare `Vegetarian` and `Vegetarian Family`, and when nothing was mentioned the field was left blank instead of an explicit default. Added the missing aliases (ordered most-specific-first in the alternation) and added `normalizeVegNonVeg()`, which always returns `'Vegetarian'` or `'No Restriction'` — never blank, and never inferred as Vegetarian without an explicit mention (`Non Veg` mentions correctly resolve to `No Restriction`).
+
+### Verification
+
+- Full regression suite: **170/170 passed** (100 property + 50 negative + 18 normalizer edge cases + 2 webhook structure) — no regressions.
+- Manually re-parsed the specific fixtures that motivated each fix and confirmed the corrected output:
+  - `property_message_090.md` → `societyName: "Sobha Dream Acres"` (no URL), `bathrooms: 2`.
+  - `property_message_005.md` → `societyName: null` under `apartmentType: "Gated Community"` (landmark correctly rejected).
+  - `property_message_001.md` → `societyName: "Prestige Lakeside Habitat"` (fallback detection).
+  - `property_message_004.md` → `bathrooms: 2, balcony: 1` (label-first format).
+  - `property_message_006.md` → `tenantType: "Anyone"`, `vegNonVeg: "No Restriction"` (default, no mention).
+  - Spot-checked `"Vegetarian family only"` → `Vegetarian`, `"Non veg allowed"` → `No Restriction`, `"Bare Vegetarian tenants"` → `Vegetarian`, and confirmed the pre-existing multi-line `Preferred Tenant: Family & Male Bachelors` format still resolves correctly (no regression).
+
+### Files Modified
+
+- `src/parser/messageParser.js`
+- `src/normalizer/normalizer.js`
+- `docs/development/REPLIT_ENGINEERING_LOG.md` (this entry)
+
+### Known Out-of-Scope Gaps (not fixed — outside the five reported bugs)
+
+- `property_message_090.md`'s `apartmentType` still resolves incorrectly (`". 2 bath"`) due to a pre-existing `community` regex issue unrelated to the five bugs in scope.
+- Balcony abbreviation `"1 balc"` (vs. full `"balcony"`) is not recognized — not covered by the reported bug set or the fixtures cited for it.

@@ -20,11 +20,17 @@ const PATTERNS = {
   // BHK: "2 BHK", "2BHK", "2-BHK", "3 bhk", "1 RK"
   bhk: /(\d+)\s*[-]?\s*(bhk|rk)\b/i,
 
-  // Bathrooms: "2 Bathrooms", "2 Bath", "2 Washrooms", "2 baths"
-  bathrooms: /(\d+)\s*(bath(?:room)?s?|washrooms?)\b/i,
+  // Bathrooms: "2 Bathrooms", "2 Bath", "2 Washrooms", "2 baths" (value-first)
+  bathrooms: /(\d+)\s*(bath(?:room)?s?|washrooms?|toilets?)\b/i,
 
-  // Balcony: "1 Balcony", "2 Balconies", "One Balcony", "Huge Balcony"
+  // Bathrooms: "Bathrooms: 2", "Bathrooms 2", "Washrooms - 3" (label-first)
+  bathroomsLabelFirst: /\b(?:bath(?:room)?s?|washrooms?|toilets?)\s*[:\-–]?\s*(\d+)\b/i,
+
+  // Balcony: "1 Balcony", "2 Balconies", "One Balcony", "Huge Balcony" (value-first)
   balcony: /(\d+|one|two|three|four)\s*balcon(?:y|ies)\b/i,
+
+  // Balcony: "Balcony: 2", "Balcony 1", "Balconies - 3" (label-first)
+  balconyLabelFirst: /\bbalcon(?:y|ies)\s*[:\-–]?\s*(\d+|one|two|three|four)\b/i,
 
   // Utility
   utility: /\b(utility\s*area|separate\s*utility|attached\s*utility|utility)\b/i,
@@ -47,8 +53,8 @@ const PATTERNS = {
   // Available From
   available: /\bavail(?:able)?\s*(?:from\s*)?[:\-–]?\s*([^\n,]+?)(?:\n|,|$)/i,
 
-  // Preferred Tenant
-  tenant: /\bpreferred\s*tenant\s*[:\-–]?\s*([^\n]+?)(?:\n|$)/i,
+  // Tenant Type: "Preferred Tenant: Family Only", "Tenant: Anyone", "Tenant Type: Bachelors"
+  tenant: /\b(?:preferred\s*)?tenant(?:\s*type)?\s*[:\-–]?\s*([^\n.,]+?)(?:\.|,|\n|$)/i,
 
   // Pets
   pets: /\bpets?\s*[:\-–]?\s*(allowed|not\s*allowed|yes|no)\b/i,
@@ -57,10 +63,15 @@ const PATTERNS = {
   community: /\bcommunity\s*[:\-–]?\s*([^\n,]+?)(?:\n|,|$)/i,
 
   // Location
-  location: /\blocation\s*[:\-–]?\s*([^\n,]+?)(?:\n|,|$)/i,
+  location: /\blocation\s*[:\-–]?\s*([^\n,]+?)(?:\.|,|\n|$)/i,
 
-  // Society / Landmark
-  society: /\b(?:society|landmark|project|building)\s*[:\-–]?\s*([^\n,]+?)(?:\n|,|$)/i,
+  // Society / Landmark — bounded at sentence end so trailing "Link:"/URLs
+  // (e.g. "Society: Sobha Dream Acres. Link: https://...") are never swallowed.
+  society: /\b(?:society(?:\/landmark)?|landmark|project|building)\s*[:\-–]?\s*([^\n,.]+?)(?:\.|,|\n|$)/i,
+
+  // Society fallback — known builder/developer name prefixes, used only when
+  // no explicit Society/Landmark label is present in the message.
+  societyFallback: /\b((?:Prestige|Sobha|Purva|Brigade|Salarpuria|Godrej|Adarsh|Mantri|Vaswani|Shriram|Provident|Divya\s*Sree|Century|Confident|SNN|DSR|Elita|Ozone|SJR|Nitesh|Embassy|Total\s*Environment|Sattva|Assetz|Puravankara)\s+[A-Za-z]+(?:\s+[A-Za-z]+){0,3})\b/,
 
   // Google Maps link
   mapsLink: /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\.com|www\.google\.com\/maps)[^\s]*/i,
@@ -68,8 +79,9 @@ const PATTERNS = {
   // Furnishing (extracted from first line context)
   furnishing: /\b(fully\s*furnished|semi\s*furnished|partially\s*furnished|unfurnished|ff|sf|uf)\b/i,
 
-  // Veg/Non-Veg
-  vegNonVeg: /\b(vegetarian[s]?\s*only|no\s*restriction[s]?|veg\s*only|non[\s-]?veg\s*(?:ok|allowed)?)\b/i,
+  // Veg/Non-Veg — most specific phrases first (alternation tries left-to-right);
+  // bare "vegetarian" is last so it never masks "non veg" mentions.
+  vegNonVeg: /\b(vegetarian\s*family|vegetarian[s]?\s*only|veg\s*only|no\s*restriction[s]?|non[\s-]?veg\s*(?:ok|allowed)?|vegetarian)\b/i,
 
   // Negotiation
   negotiation: /\b(open\s*for\s*negotiat(?:ion|ions)|slight\s*negotiat(?:ion|ions)|fixed|no\s*negotiat(?:ion|ions))\b/i,
@@ -124,6 +136,39 @@ function parseBalcony(raw) {
   return isNaN(n) ? null : n;
 }
 
+/**
+ * Strip markdown formatting characters (bold/italic/code) from working text.
+ * Replaces them with a single space (not removed outright) so that adjacent
+ * tokens like "**Bathrooms**2" never merge into "Bathrooms2".
+ * Only used for the parser's internal matching copy — never applied to the
+ * raw message, which must always be preserved verbatim.
+ * @param {string} s
+ * @returns {string}
+ */
+function stripMarkdownFormatting(s) {
+  if (!s) return s;
+  return s.replace(/[*_`]+/g, ' ').replace(/[ \t]+/g, ' ');
+}
+
+/**
+ * Clean a captured Society/Landmark value: strip any trailing URL or
+ * "Link:"/"Map:" fragment that may have run on in the same sentence, and
+ * strip out any raw URL captured directly as the value. Never lets a
+ * Google Maps link (or any URL) end up as a society name.
+ * @param {string} raw
+ * @returns {string|null}
+ */
+function cleanSocietyCapture(raw) {
+  if (!raw) return null;
+  let s = raw;
+  // Cut at the start of any embedded URL.
+  s = s.split(/\s*(?:https?:\/\/|www\.)\S*/i)[0];
+  // Cut at a trailing "Link:"/"Map:"/"Google Maps:" fragment.
+  s = s.split(/\b(?:link|map|google\s*maps?)\s*[:\-]/i)[0];
+  s = s.trim().replace(/[.,\s]+$/, '').trim();
+  return s || null;
+}
+
 // ─── Main Parser ──────────────────────────────────────────────────────────────
 
 /**
@@ -136,7 +181,10 @@ function parseBalcony(raw) {
  * @returns {Object} property object
  */
 function parseMessage(mergedText, rawMessage) {
-  const text = mergedText || '';
+  // Working copy has markdown formatting (bold/italic/code) stripped so that
+  // labels like "**Bathrooms**" or "*Bellandur*" match the same way plain
+  // text does. rawMessage (stored verbatim below) is never touched.
+  const text = stripMarkdownFormatting(mergedText || '');
 
   const result = {
     // System-generated (not parsed)
@@ -189,16 +237,26 @@ function parseMessage(mergedText, rawMessage) {
       result.bhk = `${bhkMatch[1]} ${bhkMatch[2].toUpperCase()}`;
     }
 
-    // Bathrooms — latest value wins
-    const bathMatch = lastMatch(PATTERNS.bathrooms);
-    if (bathMatch) {
-      result.bathrooms = parseInt(bathMatch[1], 10);
+    // Bathrooms — supports both "2 Bathrooms" (value-first) and
+    // "Bathrooms 2" / "Bathrooms: 2" (label-first, common with markdown
+    // headers). Latest occurrence across either form wins.
+    const bathAllMatches = [
+      ...text.matchAll(new RegExp(PATTERNS.bathrooms.source, 'gi')),
+      ...text.matchAll(new RegExp(PATTERNS.bathroomsLabelFirst.source, 'gi')),
+    ];
+    if (bathAllMatches.length > 0) {
+      const lastBath = bathAllMatches.reduce((a, b) => (b.index > a.index ? b : a));
+      result.bathrooms = parseInt(lastBath[1], 10);
     }
 
-    // Balcony — "Huge/Large/Spacious Balcony" → 1; "2 Balconies" → 2; latest wins
-    const balconyMatches = [...text.matchAll(new RegExp(PATTERNS.balcony.source, 'gi'))];
-    if (balconyMatches.length > 0) {
-      const lastBalcony = balconyMatches[balconyMatches.length - 1];
+    // Balcony — "Huge/Large/Spacious Balcony" → 1; "2 Balconies" → 2;
+    // "Balcony 1" / "Balcony: 1" (label-first) also supported. Latest wins.
+    const balconyAllMatches = [
+      ...text.matchAll(new RegExp(PATTERNS.balcony.source, 'gi')),
+      ...text.matchAll(new RegExp(PATTERNS.balconyLabelFirst.source, 'gi')),
+    ];
+    if (balconyAllMatches.length > 0) {
+      const lastBalcony = balconyAllMatches.reduce((a, b) => (b.index > a.index ? b : a));
       result.balcony = parseBalcony(lastBalcony[1]);
     } else if (/\b(huge|large|spacious|long|private)\s+balcon(?:y|ies)\b/i.test(text)) {
       result.balcony = 1; // descriptor without count → 1
@@ -259,7 +317,8 @@ function parseMessage(mergedText, rawMessage) {
       result.availableFrom = availMatch[1].trim() || null;
     }
 
-    // Tenant — latest value wins
+    // Tenant — latest value wins. "Preferred" is optional so bare
+    // "Tenant: Anyone" messages (no "Preferred") are captured too.
     const tenantMatch = lastMatch(PATTERNS.tenant);
     if (tenantMatch) {
       result.tenantType = tenantMatch[1].trim() || null;
@@ -279,16 +338,28 @@ function parseMessage(mergedText, rawMessage) {
       result.apartmentType = communityMatch[1].trim() || null;
     }
 
-    // Location — latest value wins
+    // Location — latest value wins. Working text already has markdown
+    // stripped, so "*Bellandur*" no longer leaks asterisks into the sheet.
     const locationMatch = lastMatch(PATTERNS.location);
     if (locationMatch) {
-      result.location = locationMatch[1].trim() || null;
+      result.location = locationMatch[1].replace(/\s+/g, ' ').trim() || null;
     }
 
-    // Society — latest value wins
+    // Society — latest value wins. Cleaned to cut off any trailing
+    // "Link:"/URL fragment that ran on in the same sentence.
     const societyMatch = lastMatch(PATTERNS.society);
     if (societyMatch) {
-      result.societyName = societyMatch[1].trim() || null;
+      result.societyName = cleanSocietyCapture(societyMatch[1]);
+    }
+
+    // Society fallback — if no labeled Society/Landmark was found, look for
+    // a known builder/developer name mentioned in free text (e.g.
+    // "Prestige Lakeside Habitat" with no "Society:" label at all).
+    if (!result.societyName) {
+      const fallbackMatch = lastMatch(PATTERNS.societyFallback);
+      if (fallbackMatch) {
+        result.societyName = cleanSocietyCapture(fallbackMatch[1]);
+      }
     }
 
     // Google Maps Link — last URL wins

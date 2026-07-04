@@ -125,17 +125,45 @@ function normalizeSocietyName(raw, apartmentType) {
 
   const s = raw.trim();
 
-  // For Stand Alone / Independent: pure landmarks are not society names
-  if (apartmentType === 'Stand Alone') {
-    const landmarkPrefixes = /^(near|opposite|next\s*to|behind|beside|adj(?:acent)?\s*to)\b/i;
-    if (landmarkPrefixes.test(s)) return null;
-  }
+  // A URL/maps link must never be stored as a society name, regardless of
+  // how it ended up in the parsed value (defense-in-depth alongside the
+  // parser's own cleanup).
+  if (/https?:\/\/|www\.|goo\.gl|maps\.google|maps\.app/i.test(s)) return null;
+
+  // Pure landmark descriptions ("Opposite Decathlon", "Near Metro Station")
+  // are not society names — regardless of apartment type. A landmark
+  // mentioned under a Gated Community is just as invalid as one under a
+  // Stand Alone listing.
+  const landmarkPrefixes = /^(near|opposite|next\s*to|behind|beside|adj(?:acent)?\s*to)\b/i;
+  if (landmarkPrefixes.test(s)) return null;
 
   // Title-case the name
   return s
     .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
+}
+
+// ─── Veg/Non-Veg Restriction ───────────────────────────────────────────────────
+
+/**
+ * Normalize the Vegetarian Restriction field.
+ * Populates "Vegetarian" only when the broker explicitly mentions
+ * Vegetarian / Vegetarian Only / Veg Only / Vegetarian Family.
+ * Any other explicit statement (e.g. "Non Veg OK") or no mention at all
+ * defaults to "No Restriction" — the field is never left blank and is
+ * never inferred as Vegetarian without an explicit mention.
+ * @param {string} raw
+ * @returns {string} 'Vegetarian' | 'No Restriction'
+ */
+function normalizeVegNonVeg(raw) {
+  if (!raw) return 'No Restriction';
+  const s = raw.trim().toLowerCase();
+
+  if (/non[\s-]?veg/.test(s)) return 'No Restriction';
+  if (/vegetarian|veg\s*only/.test(s)) return 'Vegetarian';
+
+  return 'No Restriction';
 }
 
 // ─── Amount (already numeric from parser) ────────────────────────────────────
@@ -205,6 +233,10 @@ function normalize(parsed) {
 
     // Location — preserve as-is
     normalized.location = parsed.location || null;
+
+    // Vegetarian Restriction — always explicit ('Vegetarian' or 'No
+    // Restriction'), never blank and never inferred without a mention.
+    normalized.vegNonVeg = normalizeVegNonVeg(parsed.vegNonVeg);
 
     // rawMessage — NEVER modified
     normalized.rawMessage = parsed.rawMessage;
