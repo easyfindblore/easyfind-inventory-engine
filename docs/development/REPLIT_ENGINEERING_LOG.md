@@ -538,3 +538,132 @@ PID: `PID260704001`
 *End of Session 004*
 
 ---
+
+## SESSION 005
+
+**Date & Time:** 2026-07-04
+
+**Objective:** Task 2 — Full Add Inventory workflow redesign per product specification. Silent collection, durable draft persistence, full state machine, new PID format, inactivity timer, dedup, duplicate detection, post-success menu.
+
+---
+
+### Repository Status Before Work
+
+**Branch:** `main`
+**Commit at session start:** `003fe91` (origin/main in sync)
+**Local diff:** `.replit` only (Replit-managed, not committed)
+**Test status at session start:** 170/170 pass
+
+---
+
+### Work Completed
+
+#### Sync Report (Task 1 — completed this session)
+
+| Field | Value |
+|---|---|
+| Branch | main |
+| Remote commit | 003fe91 |
+| Local in sync | Yes — only .replit differs (Replit-managed) |
+| Test result | 170/170 pass |
+| Runtime | All credentials configured ✓ |
+
+#### Task 2 — Add Inventory Workflow Redesign
+
+All new files created in `src/inventory/` directory. No existing files removed. Two existing files modified minimally (pidGenerator.js, sheets.js). webhookController.js rewritten to add priority routing.
+
+**New files created:**
+
+| File | Purpose |
+|---|---|
+| `src/config/referenceData.json` | Enum reference data for furnishing, tenantType, apartmentType, bhk, availability, locations — editable without code change |
+| `src/inventory/inventoryResponses.js` | All broker-facing message templates (welcome, status, help, menu, cancel, save, processing, success, whatNext, errors, duplicateWarning, mainMenu) |
+| `src/inventory/inventoryCommands.js` | Command recognition: `isInventoryTrigger`, `identifySessionCommand`, `normalizeMenuChoice`, `parseCancelConfirm`, `parseMidSessionMenu`, `parseReturnMenu`, `parsePostSuccessMenu`, `parseDuplicateWarning` |
+| `src/inventory/draftStore.js` | Durable session storage: in-memory Map + Google Sheets "Drafts" tab, debounced 400ms writes, auto-creates tab on startup, CRUD, startup load |
+| `src/inventory/inventoryController.js` | Full state machine: COLLECTING, INACTIVE, CONFIRM_CANCEL, MID_SESSION_MENU, RETURN_MENU, POST_SUCCESS, CONFIRM_DUPLICATE. Inactivity timer (nudge at 50%, timeout at 100%), webhook dedup via in-memory TTL set, DONE processing (parse→normalize→validate→dedup→download media→save), `initialize()` |
+
+**Files modified:**
+
+| File | Change |
+|---|---|
+| `src/utils/pidGenerator.js` | Added `generateEFPID(date, seq)` → `EF-YYYYMMDD-NNNNNN` format. `generatePID` kept for legacy data. |
+| `src/services/sheets.js` | `generatePIDAndAppend` accepts optional `options.pidGenerator` param (defaults to legacy format). Backward compatible. Duplicate JSDoc removed. |
+| `src/controllers/webhookController.js` | Added `inventoryController.tryHandleMessage()` as priority first-pass routing. All legacy Add Media / Delete Media / Cancel / Done flows preserved intact. ADD_PROPERTY no longer started from legacy flow (inventory controller owns all property triggers). |
+| `src/index.js` | Added `await inventoryController.initialize()` in server startup — loads Sheets Drafts tab, starts inactivity timer. |
+
+**Key design decisions:**
+
+1. **Durable drafts via Google Sheets "Drafts" tab** — satisfies "Google Sheets is the only database" constraint. In-memory Map is the working store; debounced writes flush to Sheets asynchronously. On startup, all rows are loaded back into memory.
+
+2. **Silence rule during COLLECTING** — zero broker-facing ACKs for text, images, videos, location, documents. Only commands produce responses.
+
+3. **Required fields at DONE time** — Location, Apartment Type, BHK, Bathrooms, Size, Furnishing, Tenant Type, Rent, Deposit, Availability. Missing fields are reported in one message; session stays COLLECTING.
+
+4. **Inactivity timer** — setInterval every 60s. Nudge at 50% of timeout (15 min). State → INACTIVE at timeout. INACTIVE sessions are preserved, not deleted. Broker return → RETURN_MENU.
+
+5. **Webhook dedup** — in-memory Map<messageId, timestamp>, evicted after 5 min. Prevents same WhatsApp message from processing twice on Meta retries.
+
+6. **Duplicate property detection** — uniqueKey (location|bhk|rent|apartmentType) compared against existing rows for same broker in last 7 days. Shows CONFIRM_DUPLICATE warning with Save-Anyway / Cancel options.
+
+7. **New PID format** — `EF-YYYYMMDD-NNNNNN` (6-digit zero-padded sequence). Old `PIDyymmddNNN` format preserved for any existing data.
+
+8. **Legacy trigger backward compat** — "add property", "new property", "start property", "create listing" all route to new inventory flow (in addition to spec triggers: "2", "Add Inventory", "Inventory", "Add").
+
+9. **Media dedup** — `seenMediaIds` array on draft prevents same WhatsApp media ID from being stored twice (guards against WhatsApp's own retry delivery).
+
+10. **Reference data extensibility** — `src/config/referenceData.json` is the default. Structure is ready for a Google Sheets "Reference" tab override (future iteration).
+
+---
+
+### Test Results
+
+| Suite | Before | After |
+|---|---|---|
+| Property Messages | 100/100 | 100/100 |
+| Negative Messages | 50/50 | 50/50 |
+| Normalizer Edge Cases | 18/18 | 18/18 |
+| Webhook Fixture Structure | 2/2 | 2/2 |
+| **Total** | **170/170** | **170/170** |
+
+**No regressions. All tests pass.**
+
+---
+
+### Server Startup Log (post-implementation)
+
+```
+[info] SessionManager initialized
+[info] EasyFind Inventory Engine — Port 3000
+[info] All credentials configured ✓
+[info] DraftStore: Drafts sheet tab created
+[info] DraftStore initialized {"draftsLoaded":0}
+[info] Inventory inactivity timer started {"timeoutMs":1800000,"nudgeMs":900000}
+[info] Inventory engine initialized
+[info] Ready to receive WhatsApp webhooks
+```
+
+---
+
+### Pending / Out of Scope
+
+| Item | Status |
+|---|---|
+| Render deployment | Out of scope this session — no GitHub PAT |
+| Meta webhook registration | Out of scope — Render deploy blocked |
+| Reference tab in Google Sheets | Future iteration — JSON fallback in place |
+| Location Master (valid location list) | Not yet populated — accepts any non-empty location for now |
+| Manus AI integration testing | Manus owns `tests/`, `fixtures/`, `regression/` — their regression suite should be run against the new inventory flow |
+
+---
+
+### Governance
+
+- Replit Agent owned all work this session: `src/`, `docs/development/`
+- No Manus assets (`tests/`, `fixtures/`, `regression/`) modified
+- `docs/specs/` read-only during this session — no modifications
+
+---
+
+*End of Session 005*
+
+---

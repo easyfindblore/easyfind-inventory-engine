@@ -3,8 +3,13 @@
 /**
  * Webhook Controller — EasyFind Inventory Engine
  *
- * Orchestrates the complete property addition flow:
- *   Incoming message → Session → Parser → Normalizer → Cloudinary → Sheets → WhatsApp reply
+ * Dispatch layer for all incoming WhatsApp messages.
+ * Routes inventory-flow messages to inventoryController first;
+ * falls through to the legacy Add Media / Delete Media flows.
+ *
+ * Scope:
+ *   inventoryController — new Add Inventory workflow (this file owns routing only)
+ *   Add Media / Delete Media — legacy flows, untouched here
  *
  * Reference:
  *   - docs/specs/06_whatsapp_session_flow.md
@@ -18,12 +23,13 @@ const { normalize } = require('../normalizer/normalizer');
 const { sendTextMessage, downloadMedia, RESPONSES } = require('../services/whatsapp');
 const { uploadAllMedia } = require('../services/cloudinary');
 const { generatePIDAndAppend, findByPid, updateImageUrls } = require('../services/sheets');
+const inventoryController = require('../inventory/inventoryController');
 
-// Required fields for a valid property submission
+// Required fields for a valid property submission (legacy flow — kept for Add Media)
 const REQUIRED_FIELDS = ['location', 'rent', 'apartmentType'];
 
 /**
- * Process a single incoming WhatsApp webhook event.
+ * Process a single incoming WhatsApp webhook entry.
  * @param {Object} entry — parsed from Meta webhook payload
  */
 async function processEntry(entry) {
@@ -51,24 +57,25 @@ async function processEntry(entry) {
 async function processMessage(message, metadata) {
   const senderPhone = message.from;
   const messageId = message.id;
-  const messageType = message.type; // text, image, video, etc.
+  const messageType = message.type;
 
   logger.info('Message received', { senderPhone, messageId, messageType });
+
+  // ── New Inventory Flow (priority routing) ─────────────────────────────────
+  // inventoryController handles: active inventory sessions, INACTIVE drafts,
+  // and all inventory trigger phrases ("2", "Add Inventory", "Inventory", "Add").
+  // Returns true if it consumed the message.
+  const handledByInventory = await inventoryController.tryHandleMessage(message, metadata);
+  if (handledByInventory) return;
+
+  // ── Legacy flows (Add Media / Delete Media) ────────────────────────────────
 
   const session = sessionManager.getSession(senderPhone);
   const STATE = sessionManager.getStates();
 
-  // ── Text messages ────────────────────────────────────────────────────────────
   if (messageType === 'text') {
     const text = message.text?.body || '';
     const command = sessionManager.identifyCommand(text);
-
-    // ── Command: Add Property ─────────────────────────────────────────────────
-    if (command === 'ADD_PROPERTY') {
-      sessionManager.startAddPropertySession(senderPhone);
-      await sendTextMessage(senderPhone, RESPONSES.sessionStarted());
-      return;
-    }
 
     // ── Command: Add Media ────────────────────────────────────────────────────
     if (command === 'ADD_MEDIA') {
@@ -96,10 +103,9 @@ async function processMessage(message, metadata) {
       return;
     }
 
-    // ── No command — add to session if active ─────────────────────────────────
+    // ── Session active — add text ─────────────────────────────────────────────
     if (session) {
       if (session.state === STATE.ADD_MEDIA && !session.targetPid) {
-        // User is sending the PID for the media session
         const pidCandidate = text.trim().toUpperCase();
         if (/^PID\d+$/i.test(pidCandidate)) {
           const existing = await findByPid(pidCandidate);
@@ -124,24 +130,22 @@ async function processMessage(message, metadata) {
     return;
   }
 
-  // ── Media messages (image / video) ───────────────────────────────────────────
+  // ── Media messages ────────────────────────────────────────────────────────
   if (messageType === 'image' || messageType === 'video') {
     if (!session) {
-      await sendTextMessage(senderPhone, `📎 Media received, but no active session.\n\nType *Add Property* to start.`);
+      await sendTextMessage(senderPhone, `📎 Media received, but no active session.\n\nType *Add Inventory* to start.`);
       return;
     }
-
     const mediaId = message[messageType]?.id;
     if (mediaId) {
       sessionManager.addMedia(senderPhone, messageType, mediaId);
     }
-
     const summary = sessionManager.getSummary(senderPhone);
     await sendTextMessage(senderPhone, RESPONSES.mediaReceived(summary.imageCount, summary.videoCount));
     return;
   }
 
-  // ── Location ──────────────────────────────────────────────────────────────────
+  // ── Location ──────────────────────────────────────────────────────────────
   if (messageType === 'location') {
     if (session) {
       const loc = message.location;
@@ -156,21 +160,18 @@ async function processMessage(message, metadata) {
 }
 
 /**
- * Handle the "Done" command — lock session, process, save, reply.
- * @param {string} senderPhone
- * @param {string} messageId
+ * Handle the "Done" command for the legacy Add Media flow.
  */
 async function handleDone(senderPhone, messageId) {
   const STATE = sessionManager.getStates();
   const currentSession = sessionManager.getSession(senderPhone);
 
-  // ── Add Media flow ────────────────────────────────────────────────────────
   if (currentSession?.state === STATE.ADD_MEDIA) {
     await handleAddMediaDone(senderPhone, currentSession);
     return;
   }
 
-  // ── Add Property flow ─────────────────────────────────────────────────────
+  // Legacy Add Property flow (no longer triggered — kept as safety fallback)
   const snapshot = sessionManager.lockForProcessing(senderPhone);
   if (!snapshot) {
     await sendTextMessage(senderPhone, RESPONSES.unknownCommand());
@@ -180,13 +181,9 @@ async function handleDone(senderPhone, messageId) {
   await sendTextMessage(senderPhone, RESPONSES.processing());
 
   try {
-    // 1. Parse merged text
     const parsed = parseMessage(snapshot.mergedText, snapshot.rawMessage);
-
-    // 2. Normalize
     const normalized = normalize(parsed);
 
-    // 3. Validate mandatory fields
     const missing = REQUIRED_FIELDS.filter((f) => !normalized[f]);
     if (missing.length > 0) {
       const labels = {
@@ -199,26 +196,17 @@ async function handleDone(senderPhone, messageId) {
       return;
     }
 
-    // 5. Download media from WhatsApp — treat any download failure as blocking
     const mediaItems = [];
     let downloadFailCount = 0;
     for (const imgId of snapshot.images) {
       const media = await downloadMedia(imgId);
-      if (media) {
-        mediaItems.push({ buffer: media.buffer, type: 'image' });
-      } else {
-        downloadFailCount++;
-        logger.warn('Media download failed', { imgId });
-      }
+      if (media) { mediaItems.push({ buffer: media.buffer, type: 'image' }); }
+      else { downloadFailCount++; logger.warn('Media download failed', { imgId }); }
     }
     for (const vidId of snapshot.videos) {
       const media = await downloadMedia(vidId);
-      if (media) {
-        mediaItems.push({ buffer: media.buffer, type: 'video' });
-      } else {
-        downloadFailCount++;
-        logger.warn('Media download failed', { vidId });
-      }
+      if (media) { mediaItems.push({ buffer: media.buffer, type: 'video' }); }
+      else { downloadFailCount++; logger.warn('Media download failed', { vidId }); }
     }
     if (downloadFailCount > 0) {
       sessionManager.destroySession(senderPhone);
@@ -228,18 +216,12 @@ async function handleDone(senderPhone, messageId) {
       return;
     }
 
-    // 6 + 7. Atomically: generate PID → upload Cloudinary (with real PID) → append Sheets.
-    //   All three steps run inside a single in-process lock so no concurrent session
-    //   can read the same row count before either write commits.
-    //   Any Cloudinary failure throws inside the callback, which aborts the append.
     const { ok: saved, pid } = await generatePIDAndAppend(
       normalized,
       async (confirmedPid) => {
         if (mediaItems.length === 0) return [];
         const { urls, failCount } = await uploadAllMedia(confirmedPid, mediaItems);
-        if (failCount > 0) {
-          throw new Error(`${failCount} media file${failCount > 1 ? 's' : ''} could not be uploaded to Cloudinary`);
-        }
+        if (failCount > 0) throw new Error(`${failCount} media file${failCount > 1 ? 's' : ''} could not be uploaded to Cloudinary`);
         return urls;
       },
       senderPhone,
@@ -248,19 +230,16 @@ async function handleDone(senderPhone, messageId) {
 
     if (!saved) {
       sessionManager.destroySession(senderPhone);
-      // Distinguish Cloudinary failure from Sheets failure in the reply
       await sendTextMessage(senderPhone,
         `━━━━━━━━━━━━━━━━━━\n❌ *Property not added.*\n\nMedia upload or database write failed. Please try again.\n━━━━━━━━━━━━━━━━━━`
       );
       return;
     }
 
-    // 8. Reply with success
     sessionManager.destroySession(senderPhone);
     const totalMedia = snapshot.imageCount + snapshot.videoCount;
     await sendTextMessage(senderPhone, RESPONSES.successAdded(pid, normalized, totalMedia));
-
-    logger.info('Property added successfully', { pid, senderPhone, mediaCount: totalMedia });
+    logger.info('Property added successfully (legacy flow)', { pid, senderPhone, mediaCount: totalMedia });
 
   } catch (err) {
     logger.error('handleDone error', { senderPhone, error: err.message, stack: err.stack });
@@ -292,7 +271,6 @@ async function handleAddMediaDone(senderPhone, session) {
 
     const existingUrls = (existing.data.imageUrls || '').split(',').map((u) => u.trim()).filter(Boolean);
 
-    // Download new media — treat any download failure as blocking
     const mediaItems = [];
     let dlFail = 0;
     for (const imgId of snapshot.images) {
@@ -311,7 +289,6 @@ async function handleAddMediaDone(senderPhone, session) {
       return;
     }
 
-    // Upload to Cloudinary — any failure blocks Sheets update (fail-closed)
     const { urls, failCount } = await uploadAllMedia(pid, mediaItems, existingUrls.length);
     if (failCount > 0) {
       logger.error('Add-media Cloudinary upload failed — Sheets not updated', { pid, failCount });
@@ -323,7 +300,6 @@ async function handleAddMediaDone(senderPhone, session) {
     }
     const allUrls = [...existingUrls, ...urls];
 
-    // Update Google Sheets — check return value
     const sheetsUpdated = await updateImageUrls(existing.rowIndex, allUrls);
     sessionManager.destroySession(senderPhone);
 
@@ -332,10 +308,7 @@ async function handleAddMediaDone(senderPhone, session) {
       return;
     }
 
-    await sendTextMessage(
-      senderPhone,
-      RESPONSES.mediaAddedSuccess(pid, urls.length, allUrls.length)
-    );
+    await sendTextMessage(senderPhone, RESPONSES.mediaAddedSuccess(pid, urls.length, allUrls.length));
   } catch (err) {
     logger.error('handleAddMediaDone error', { senderPhone, pid, error: err.message });
     sessionManager.destroySession(senderPhone);

@@ -75,7 +75,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 
 const PORT = config.port;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   logger.info('═══════════════════════════════════════════');
   logger.info('  EasyFind Inventory Engine');
   logger.info(`  Environment : ${config.nodeEnv}`);
@@ -89,6 +89,14 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     warnings.forEach((w) => logger.warn(`  ⚠ ${w}`));
   } else {
     logger.info('All credentials configured ✓');
+  }
+
+  // Initialize inventory engine (loads drafts from Sheets, starts inactivity timer)
+  try {
+    const inventoryController = require('./inventory/inventoryController');
+    await inventoryController.initialize();
+  } catch (err) {
+    logger.error('Inventory engine initialization error', { error: err.message });
   }
 
   logger.info('Ready to receive WhatsApp webhooks');

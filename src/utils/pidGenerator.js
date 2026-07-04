@@ -13,7 +13,7 @@
  */
 
 /**
- * Generate a PID from a date and sequence number.
+ * Generate a legacy PID from a date and sequence number.
  * @param {Date} date
  * @param {number} sequence — 1-based count of properties added on this date
  * @returns {string} e.g. "PID240703001"
@@ -25,6 +25,22 @@ function generatePID(date, sequence) {
   const dd = String(d.getDate()).padStart(2, '0');
   const seq = String(sequence).padStart(3, '0');
   return `PID${yy}${mm}${dd}${seq}`;
+}
+
+/**
+ * Generate a new-format EasyFind PID: EF-YYYYMMDD-NNNNNN
+ * Used by the new Add Inventory workflow.
+ * @param {Date} date
+ * @param {number} sequence — 1-based count of properties added on this date
+ * @returns {string} e.g. "EF-20260704-000127"
+ */
+function generateEFPID(date, sequence) {
+  const d = date || new Date();
+  const yyyy = String(d.getFullYear());
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const seq = String(sequence).padStart(6, '0');
+  return `EF-${yyyy}${mm}${dd}-${seq}`;
 }
 
 /**
@@ -40,4 +56,4 @@ function generateMediaPublicId(pid, type, index) {
   return `inventory/${pid}_${type}${suffix}`;
 }
 
-module.exports = { generatePID, generateMediaPublicId };
+module.exports = { generatePID, generateEFPID, generateMediaPublicId };

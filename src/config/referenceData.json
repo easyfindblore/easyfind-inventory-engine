@@ -1,0 +1,38 @@
+{
+  "_note": "Edit this file to update enum values. For live updates without redeploy, maintain a 'Reference' tab in the EasyFind Google Sheet — the system reads it at startup and caches it.",
+  "furnishing": [
+    { "value": "Fully Furnished",    "aliases": ["fully furnished","fully","ff","full furnished","furnished fully","fully-furnished","full-furnished"] },
+    { "value": "Semi Furnished",     "aliases": ["semi furnished","semi-furnished","semi","sf","semifurnished","partially furnished","partial furnished","partially","partial","pf","semi-furnished"] },
+    { "value": "Unfurnished",        "aliases": ["unfurnished","uf","un-furnished","not furnished","bare","empty","no furniture","no furnishing"] }
+  ],
+  "tenantType": [
+    { "value": "Family",    "aliases": ["family","families","family only","families only","family preferred"] },
+    { "value": "Bachelor",  "aliases": ["bachelor","bachelors","bachelor only","bachelors only","single","singles","single only","boys","girls","bachelor/spinster"] },
+    { "value": "Any",       "aliases": ["any","all","no preference","no restriction","anyone","no restrictions","open","all welcome","any tenant"] },
+    { "value": "Company",   "aliases": ["company","companies","corporate","corporate only","company lease","corporate lease"] },
+    { "value": "Female",    "aliases": ["female","females","female only","ladies only","ladies","women only","women","girls only"] }
+  ],
+  "apartmentType": [
+    { "value": "Gated Community", "aliases": ["gated community","gated","gated apartment","gated society","gated complex","gated area","community","gc","gated colony","gated layout","gated project"] },
+    { "value": "Semi Gated",      "aliases": ["semi gated","semi-gated","semi gated community","sg","semi gated area"] },
+    { "value": "Stand Alone",     "aliases": ["stand alone","standalone","independent","independent house","independent villa","row house","bungalow","duplex villa","sa","individual house","individual"] },
+    { "value": "Villa",           "aliases": ["villa","villas","duplex","triplex"] }
+  ],
+  "bhk": [
+    { "value": "1 RK",   "aliases": ["1rk","1 rk","rk","1-rk","studio","1 room kitchen"] },
+    { "value": "1 BHK",  "aliases": ["1bhk","1 bhk","1-bhk","one bhk","1bedroom"] },
+    { "value": "2 BHK",  "aliases": ["2bhk","2 bhk","2-bhk","two bhk","2bedroom"] },
+    { "value": "2.5 BHK","aliases": ["2.5bhk","2.5 bhk","2.5-bhk","two and half bhk","2 and half bhk"] },
+    { "value": "3 BHK",  "aliases": ["3bhk","3 bhk","3-bhk","three bhk","3bedroom"] },
+    { "value": "3.5 BHK","aliases": ["3.5bhk","3.5 bhk","3.5-bhk","three and half bhk"] },
+    { "value": "4 BHK",  "aliases": ["4bhk","4 bhk","4-bhk","four bhk","4bedroom"] },
+    { "value": "4.5 BHK","aliases": ["4.5bhk","4.5 bhk","4.5-bhk"] },
+    { "value": "5 BHK",  "aliases": ["5bhk","5 bhk","5-bhk","five bhk"] }
+  ],
+  "availability": [
+    { "value": "Available",   "aliases": ["available","ready","ready to move","immediate","now","vacant","move in ready","immediately","rtm","move-in ready"] },
+    { "value": "Rented Out",  "aliases": ["rented out","rented","occupied","not available","na","taken","unavailable"] },
+    { "value": "Delayed",     "aliases": ["delayed","delay","not ready","under construction","uc","soon","upcoming"] }
+  ],
+  "locations": []
+}

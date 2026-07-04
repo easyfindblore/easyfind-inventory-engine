@@ -249,9 +249,16 @@ let _pidLock = Promise.resolve();
  *   Called inside the lock with the confirmed PID. Must throw on failure.
  * @param {string} senderPhone
  * @param {string} messageId
+ * @param {Object} [options]
+ * @param {Function} [options.pidGenerator] — (date: Date, seq: number) => string
+ *   Defaults to legacy PID format. Pass generateEFPID for the new inventory flow.
  * @returns {Promise<{ok: boolean, pid: string|null}>}
  */
-function generatePIDAndAppend(property, getImageUrls, senderPhone, messageId) {
+function generatePIDAndAppend(property, getImageUrls, senderPhone, messageId, options = {}) {
+  const pidGen = (typeof options.pidGenerator === 'function')
+    ? options.pidGenerator
+    : generatePID;
+
   _pidLock = _pidLock.then(async () => {
     // 1. Read current rows to determine today's sequence number.
     //    FAIL-CLOSED: if the read fails or returns null for any reason, abort
@@ -278,7 +285,7 @@ function generatePIDAndAppend(property, getImageUrls, senderPhone, messageId) {
       }
     }
 
-    const pid = generatePID(today, todayCount + 1);
+    const pid = pidGen(today, todayCount + 1);
 
     // 2. Upload media (if any) using the confirmed PID — still inside lock.
     //    Any upload failure throws, which propagates to the catch below.
