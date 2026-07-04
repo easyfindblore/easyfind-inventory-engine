@@ -6,11 +6,14 @@
     { "value": "Unfurnished",        "aliases": ["unfurnished","uf","un-furnished","not furnished","bare","empty","no furniture","no furnishing"] }
   ],
   "tenantType": [
-    { "value": "Family",    "aliases": ["family","families","family only","families only","family preferred"] },
-    { "value": "Bachelor",  "aliases": ["bachelor","bachelors","bachelor only","bachelors only","single","singles","single only","boys","girls","bachelor/spinster"] },
-    { "value": "Any",       "aliases": ["any","all","no preference","no restriction","anyone","no restrictions","open","all welcome","any tenant"] },
-    { "value": "Company",   "aliases": ["company","companies","corporate","corporate only","company lease","corporate lease"] },
-    { "value": "Female",    "aliases": ["female","females","female only","ladies only","ladies","women only","women","girls only"] }
+    { "value": "Family Only",           "aliases": ["family only","family","families","families only","family preferred"] },
+    { "value": "Anyone",                "aliases": ["anyone","any","all","no preference","no restriction","no restrictions","open","all welcome","any tenant","anyone preferred","open for all"] },
+    { "value": "Bachelor",              "aliases": ["bachelor","bachelors","bachelor only","bachelors only","bachelor preferred","single","singles","single only","boys","girls","bachelor/spinster"] },
+    { "value": "Working Professionals", "aliases": ["working professionals","working professional"] },
+    { "value": "Professionals",         "aliases": ["professionals","professional"] },
+    { "value": "Corporate",             "aliases": ["corporate","company","companies","corporate only","company lease","corporate lease"] },
+    { "value": "Students",              "aliases": ["students","student"] },
+    { "value": "Female",               "aliases": ["female","females","female only","ladies only","ladies","women only","women","girls only"] }
   ],
   "apartmentType": [
     { "value": "Gated Community", "aliases": ["gated community","gated","gated apartment","gated society","gated complex","gated area","community","gc","gated colony","gated layout","gated project"] },

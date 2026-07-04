@@ -909,3 +909,23 @@ Reviewed all relevant source files before verifying fixes:
 - B002 Render deployment still pending (user action required in Render dashboard).
 - B003 Meta webhook registration blocked on B002.
 - All other blockers remain as documented in `PROJECT_STATUS.md`.
+
+### Code Review Finding — referenceData.json Tenant Type Misalignment (Fixed in Session 007)
+
+**Issue identified by code review:** `_applyReferenceNorm()` in `inventoryController.js` runs after `normalizeTenantType()` and remaps via `referenceData.json`. The old reference data used "Family" (not "Family Only") and "Any" (not "Anyone") as canonical values, and had no entries for "Working Professionals", "Professionals", "Corporate", or "Students" — meaning `_matchRef` would return `null` for those, triggering a required-field failure at save time.
+
+**Root cause:** The `referenceData.json` `tenantType` section was not updated when `normalizeTenantType()` was added in Session 006 to produce LOV-compliant canonical values.
+
+**Fix (`src/config/referenceData.json`):** Updated all `tenantType` canonical `value` fields to match the normalizer output: "Family" → "Family Only", "Any" → "Anyone"; added "Working Professionals", "Professionals", "Corporate", "Students", "Female" with correct alias sets. Old canonical values moved to aliases so legacy data continues to match. Verified end-to-end: all 17 broker input variants pass through normalizer → `_matchRef` → correct canonical value with no nulls.
+
+**Pipeline trace (verified):**
+- "Family" / "Families" / "Family Preferred" → normalizer: "Family Only" → refData: "Family Only" ✓
+- "Any" / "All" / "Open For All" / "Anyone Preferred" → normalizer: "Anyone" → refData: "Anyone" ✓
+- "Bachelor" / "Bachelors" / "Bachelor Preferred" → normalizer: "Bachelor" → refData: "Bachelor" ✓
+- "Working Professionals" → normalizer: "Working Professionals" → refData: "Working Professionals" ✓
+- "Corporate" → normalizer: "Corporate" → refData: "Corporate" ✓
+- "Students" → normalizer: "Students" → refData: "Students" ✓
+
+**Regression:** 170/170 tests pass after fix. App restarts cleanly.
+
+**Scope note:** `referenceData.json` is configuration data driving the normalization pipeline — within the scope-locked domain of "Inventory normalization" per the task document. No source code files outside the scope were touched.
