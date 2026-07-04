@@ -325,11 +325,78 @@ function columnIndexToLetter(index) {
   return result;
 }
 
+/**
+ * Find the MOST RECENTLY ADDED row matching a given PID.
+ * Because PID is not guaranteed unique in Live Tracking (known data issue),
+ * we scan all rows and return the last match. Always resolves by row index.
+ * @param {string} pid
+ * @returns {Promise<{rowIndex: number, data: Object}|null>}
+ */
+async function findByPidLatest(pid) {
+  const rows = await getAllRows();
+  if (!rows) return null;
+
+  let result = null;
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if ((row[0] || '').trim().toUpperCase() === pid.trim().toUpperCase()) {
+      const data = {};
+      COLUMN_ORDER.forEach((col, idx) => {
+        data[col] = row[idx] || null;
+      });
+      // Overwrite on each match — last one wins (most recently added)
+      result = { rowIndex: i + 1, data };
+    }
+  }
+
+  if (!result) return null;
+
+  if (result) {
+    logger.debug('findByPidLatest resolved', { pid, rowIndex: result.rowIndex });
+  }
+  return result;
+}
+
+/**
+ * Append a row to any named tab in the spreadsheet.
+ * Used for Search's Leads and Watch_List tabs (never touches Live Tracking).
+ * Creates the tab implicitly via Google Sheets append (it will error if the
+ * tab doesn't exist — the tab must be created manually or via the sheet UI).
+ * @param {string} tabName — exact tab name
+ * @param {Array<string>} values — row values in order
+ * @returns {Promise<boolean>}
+ */
+async function appendToTab(tabName, values) {
+  const sheets = getSheetsClient();
+  if (!sheets) {
+    logger.warn('appendToTab: Google Sheets not configured', { tabName });
+    return false;
+  }
+
+  try {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: config.google.spreadsheetId,
+      range: `${tabName}!A:Z`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [values.map((v) => (v === null || v === undefined ? '' : String(v)))] },
+    });
+    logger.info('appendToTab success', { tabName, cols: values.length });
+    return true;
+  } catch (err) {
+    logger.error('appendToTab failed', { tabName, error: err.message });
+    return false;
+  }
+}
+
 module.exports = {
+  COLUMN_ORDER,
   getAllRows,
   appendProperty,
   findByPid,
+  findByPidLatest,
   updateImageUrls,
   generateNextPID,
   generatePIDAndAppend,
+  appendToTab,
 };

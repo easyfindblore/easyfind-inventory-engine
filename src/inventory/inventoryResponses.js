@@ -8,6 +8,8 @@
  * Never expose internal IDs, URLs, paths, or stack traces in any message here.
  */
 
+const { config } = require('../config/config');
+
 const R = {
 
   // ── Session start ──────────────────────────────────────────────────────────
@@ -129,11 +131,13 @@ const R = {
   success: ({ pid, location, bhk, rent, photoCount, videoCount }) => {
     const rentFmt = rent ? `₹${Number(rent).toLocaleString('en-IN')}` : '';
     const mediaLine = buildMediaLine(photoCount, videoCount);
+    const galleryLink = `${config.publicBaseUrl}/api/gallery/${pid}`;
     return (
       `🎉 Property added!\n\n` +
       `🆔 ${pid}\n` +
       `📍 ${location || '—'} · 🏠 ${bhk || '—'} · 💰 ${rentFmt || '—'}\n` +
-      `${mediaLine}\n\n` +
+      `${mediaLine}\n` +
+      `📸 Gallery: ${galleryLink}\n\n` +
       `Nice work — it's live in your inventory. ✨`
     );
   },
@@ -159,7 +163,10 @@ const R = {
   // ── Main menu (returned to after SAVE / CANCEL / success ──────────────────
 
   mainMenu: () =>
-    `🏠 *Welcome to EasyFind!*\n\nYour inventory assistant is ready whenever you are.\n\nType *2* or *Add Inventory* to add a new property.`,
+    `🏠 *Welcome to EasyFind!*\n\nWhat would you like to do?\n\n` +
+    `1️⃣ Search Property\n` +
+    `2️⃣ Add Inventory\n\n` +
+    `Just type *1* or *2*, or say what you're looking for.`,
 
   // ── Duplicate property warning ─────────────────────────────────────────────
 

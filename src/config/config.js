@@ -62,6 +62,13 @@ const config = {
   session: {
     timeoutMs: 30 * 60 * 1000, // 30 minutes
   },
+
+  // Public base URL — used for gallery links in confirmation messages and search results
+  // No trailing slash. Override with PUBLIC_BASE_URL env var in production.
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL || 'https://easyfindautomation.onrender.com').replace(/\/$/, ''),
+
+  // Customer-facing WhatsApp number (digits only, with country code, no +)
+  customerWhatsappNumber: process.env.WHATSAPP_CUSTOMER_NUMBER || '919148338801',
 };
 
 /**

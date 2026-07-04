@@ -163,4 +163,98 @@ function buildFieldList(property) {
   return fields.join('\n');
 }
 
-module.exports = { sendTextMessage, downloadMedia, RESPONSES };
+/**
+ * Send an image message with a caption.
+ * @param {string} to
+ * @param {string} imageUrl — publicly accessible Cloudinary URL
+ * @param {string} caption — up to 1024 chars
+ * @returns {Promise<Object|null>}
+ */
+async function sendImageMessage(to, imageUrl, caption) {
+  if (!config.whatsapp.accessToken || !config.whatsapp.phoneNumberId) {
+    logger.warn('WhatsApp credentials not configured — image not sent', { to });
+    return null;
+  }
+
+  try {
+    const url = `${config.whatsapp.apiBaseUrl}/${config.whatsapp.phoneNumberId}/messages`;
+    const payload = {
+      messaging_product: 'whatsapp',
+      to,
+      type: 'image',
+      image: {
+        link: imageUrl,
+        caption: caption ? caption.slice(0, 1024) : undefined,
+      },
+    };
+
+    const response = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${config.whatsapp.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    logger.info('WhatsApp image sent', { to, messageId: response.data?.messages?.[0]?.id });
+    return response.data;
+  } catch (err) {
+    const status = err.response?.status;
+    const detail = err.response?.data?.error?.message || err.message;
+    logger.error('WhatsApp image send failed', { to, status, detail });
+    return null;
+  }
+}
+
+/**
+ * Send an interactive quick-reply buttons message.
+ * Meta allows up to 3 buttons. Button id max 256 chars, title max 20 chars.
+ * @param {string} to
+ * @param {string} bodyText — message body (up to 1024 chars)
+ * @param {Array<{id: string, title: string}>} buttons — 1–3 buttons
+ * @returns {Promise<Object|null>}
+ */
+async function sendInteractiveButtonsMessage(to, bodyText, buttons) {
+  if (!config.whatsapp.accessToken || !config.whatsapp.phoneNumberId) {
+    logger.warn('WhatsApp credentials not configured — interactive not sent', { to });
+    return null;
+  }
+
+  const metaButtons = buttons.slice(0, 3).map((btn) => ({
+    type: 'reply',
+    reply: {
+      id: String(btn.id).slice(0, 256),
+      title: String(btn.title).slice(0, 20),
+    },
+  }));
+
+  try {
+    const url = `${config.whatsapp.apiBaseUrl}/${config.whatsapp.phoneNumberId}/messages`;
+    const payload = {
+      messaging_product: 'whatsapp',
+      to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: { text: bodyText.slice(0, 1024) },
+        action: { buttons: metaButtons },
+      },
+    };
+
+    const response = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${config.whatsapp.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    logger.info('WhatsApp interactive buttons sent', { to, messageId: response.data?.messages?.[0]?.id });
+    return response.data;
+  } catch (err) {
+    const status = err.response?.status;
+    const detail = err.response?.data?.error?.message || err.message;
+    logger.error('WhatsApp interactive send failed', { to, status, detail });
+    return null;
+  }
+}
+
+module.exports = { sendTextMessage, sendImageMessage, sendInteractiveButtonsMessage, downloadMedia, RESPONSES };

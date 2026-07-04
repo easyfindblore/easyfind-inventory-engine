@@ -17,6 +17,9 @@ const express = require('express');
 const { config, validateConfig } = require('./config/config');
 const logger = require('./utils/logger');
 const webhookRouter = require('./routes/webhook');
+const galleryRouter = require('./routes/gallery');
+const locationMapping = require('./services/locationMapping');
+const propertyCache = require('./services/propertyCache');
 
 // ── App setup ─────────────────────────────────────────────────────────────────
 
@@ -53,6 +56,9 @@ app.get('/health', (req, res) => {
 // Meta Developer Console is configured with /api/webhook path
 app.use('/webhook', webhookRouter);
 app.use('/api/webhook', webhookRouter);
+
+// Property gallery page — GET /api/gallery/:pid
+app.use('/api/gallery', galleryRouter);
 
 // Root
 app.get('/', (req, res) => {
@@ -99,6 +105,13 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   }
 
   logger.info('Ready to receive WhatsApp webhooks');
+
+  // ── Search background services ─────────────────────────────────────────────
+  // Load Location Mapping and Available property list into memory.
+  // Both refresh every 5 minutes automatically.
+  locationMapping.startRefresh();
+  propertyCache.startRefresh();
+  logger.info('Search cache services started (Location Mapping + Property Cache)');
 });
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────

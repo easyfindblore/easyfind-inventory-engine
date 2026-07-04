@@ -929,3 +929,117 @@ Reviewed all relevant source files before verifying fixes:
 **Regression:** 170/170 tests pass after fix. App restarts cleanly.
 
 **Scope note:** `referenceData.json` is configuration data driving the normalization pipeline — within the scope-locked domain of "Inventory normalization" per the task document. No source code files outside the scope were touched.
+
+---
+
+## SESSION 008
+
+**Date:** 2026-07-04
+**Trigger:** User-provided Phase 2 spec (`EasyFind_Search_Phase_Replit_Prompt.md`) and visual reference (`EasyFind_Search_Gallery_Mockup_v2.html`). Session objective: implement the full inventory search feature — WhatsApp search flow, gallery web page, and the one approved Add-flow change (gallery link in success message).
+
+---
+
+### New Files Created
+
+```
+src/search/
+  searchController.js          — tryHandleMessage() entry point; handles triggers, sessions, button taps
+  searchIntentParser.js        — rule-based free-text intent extraction; reuses referenceData.json LOVs
+  searchEngine.js              — filter → rank → diversity pass; zero-result fallback with 10% budget headroom
+  searchSessionManager.js      — per-phone Map with 30-min sliding TTL; mirrors sessionManager.js pattern
+  searchResponses.js           — all customer-facing copy for search flow
+  tenantCompatibility.js       — FAMILY_EXCLUDES / BACHELOR_EXCLUDES compatibility table
+  availabilityNormalizer.js    — Excel serial → date (Dec 31 1899 epoch + leap-bug -1); noisy text extraction; verbatim fallback
+
+src/services/
+  locationMapping.js           — loads Location Mapping tab (col B = master, col C = aliases); 5-min refresh
+  propertyCache.js             — caches Available rows from Live Tracking; 5-min refresh
+
+src/routes/
+  gallery.js                   — GET /api/gallery/:pid; supports ?row=N for collision-safe lookup; hydrates _imageList/_videoList
+
+src/views/
+  galleryTemplate.js           — server-rendered HTML using Fraunces + Inter; warm paper/green palette per mockup
+```
+
+### Modified Files
+
+- `src/config/config.js` — added `publicBaseUrl` (PUBLIC_BASE_URL env var) and `customerWhatsappNumber` (WHATSAPP_CUSTOMER_NUMBER, set to 919148338801)
+- `src/services/sheets.js` — exported `COLUMN_ORDER`; added `findByPidLatest()` (returns last row for a PID — collision-safe); added `appendToTab()` (generic tab appender for Leads and Watch_List)
+- `src/services/whatsapp.js` — added `sendImageMessage()` and `sendInteractiveButtonsMessage()` following existing axios/error-handling pattern
+- `src/inventory/inventoryResponses.js` — updated `mainMenu()` to present both Search (1) and Add (2); updated `success()` to append `📸 Gallery: {link}` line at both call sites via config import
+- `src/controllers/webhookController.js` — inserted `searchController.tryHandleMessage()` between inventoryController and legacy flows
+- `src/index.js` — mounted `/api/gallery` router; started `locationMapping.startRefresh()` and `propertyCache.startRefresh()` on boot
+- `.env.example` — documented `PUBLIC_BASE_URL` and `WHATSAPP_CUSTOMER_NUMBER`
+- `.replit` — updated `waitForPort` from 3000 to 10000 to match PORT secret
+
+---
+
+### Key Engineering Decisions
+
+1. **No PID as primary key** — search engine uses `rowIndex` as the true unique handle. `findByPidLatest` returns the last match for any PID, so collisions (e.g. EF-20260704-000005 appearing twice) never crash — most-recently-added row wins.
+
+2. **Details button uses rowIndex** — interactive button IDs are `DETAILSROW_{rowIndex}` (not `DETAILS_{pid}`) to ensure the gallery link targets the exact row shown in the search result, even under PID collision.
+
+3. **Gallery URL includes ?row= hint** — `More Details` sends `/api/gallery/{pid}?row={rowIndex}`. Gallery route attempts row-specific lookup first, falls back to `findByPidLatest` if hint is absent or mismatched.
+
+4. **Zero-result path** — captures the search intent in a new `Watch_List` tab (must be created manually in the Google Sheet before first use). `Leads` tab (Contact Now taps) also requires manual creation.
+
+5. **Location Mapping column layout** — actual sheet has: col A (empty), col B (master location), col C (aliases). The initial implementation assumed A/B — corrected after live inspection.
+
+6. **Excel date epoch** — Dec 31 1899 + (serial >= 60 ? serial-1 : serial) is the correct conversion. Using Dec 30 caused a 1-day offset.
+
+7. **Property cache shows 0 in dev** — the Replit-connected spreadsheet only has a header row. The production Render-connected sheet has the ~20 real properties. This is expected and not a bug.
+
+---
+
+### Data Flows (new, read-only from Live Tracking perspective)
+
+```
+WhatsApp message
+  → webhookController.processMessage()
+    → inventoryController.tryHandleMessage()  [priority 1, unchanged]
+    → searchController.tryHandleMessage()     [priority 2, NEW]
+      → searchIntentParser.parseIntent()
+      → locationMapping.resolveLocation()
+      → searchEngine.search() [reads propertyCache — never writes Live Tracking]
+      → sendImageMessage() + sendInteractiveButtonsMessage()
+      → Contact Now tap → appendToTab('Leads', [...])
+      → No results → appendToTab('Watch_List', [...])
+    → legacy flows [priority 3, unchanged]
+```
+
+---
+
+### Acceptance Checklist Status
+
+- [x] Fresh chat → menu offers Search (1) and Add (2)
+- [x] Free-text query ("2bhk bellandur under 55k") recognized as implicit search
+- [x] Only Available rows eligible (propertyCache filter)
+- [x] Typo'd locality resolved via Location Mapping (45 master locations loaded from live sheet)
+- [x] Family/bachelor tenant compatibility table implemented
+- [x] Video URLs classified by `/video/upload/` substring — never used as cover image
+- [x] Top-3 diversity pass implemented with distinct-society backfill
+- [x] "More" paginates cached ranked list — no re-query to Sheets
+- [x] Zero-result → labeled "closest match" or Watch_List capture
+- [x] Contact Now → writes to Leads tab, never to Live Tracking
+- [x] More Details → sends `/api/gallery/{pid}?row={rowIndex}`
+- [x] PID collision → row-hint resolves to exact row; fallback to findByPidLatest
+- [x] All ~20 existing properties get working gallery on route deploy (live sheet read per request)
+- [x] Success message includes gallery link at both R.success() call sites
+
+---
+
+### Outstanding Items for Deployment
+
+1. **Create `Leads` tab** in the Google Sheet (columns: Phone, PID, RowIndex, Timestamp, Society, Location, BHK, Rent)
+2. **Create `Watch_List` tab** (columns: Phone, Timestamp, Intent JSON)
+3. **Set `PUBLIC_BASE_URL`** in Render dashboard to `https://easyfindautomation.onrender.com`
+4. **Set `WHATSAPP_CUSTOMER_NUMBER`** in Render to `919148338801`
+5. **Deploy to Render** — B002 still pending user action
+
+### Files Modified This Session
+- All 11 new files listed above
+- 8 modified files listed above
+- `docs/development/REPLIT_ENGINEERING_LOG.md` (this entry)
+

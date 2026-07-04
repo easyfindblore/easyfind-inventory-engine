@@ -1,0 +1,143 @@
+Active task
+Set up the imported project
+Set up the imported project
+The user just imported this project from a GitHub repository. It could be anything — an app to run on Replit, a library, a fork to study, code to reuse — so the first thing to do is ask what they want; everything after depends on the answer.
+
+This is a well-developed Node.js project — the EasyFind Inventory Engine. It's a WhatsApp webhook that parses property listings, uploads media to Cloudinary, and writes structured rows to Google Sheets. The code is fully built (Session 005 of development), and the app is ready to run. It just needs credentials to do anything real.
+
+A few things worth knowing:
+
+No .env file exists — all the API keys (WhatsApp, Google Sheets, Cloudinary) are missing locally
+Render deployment is pending — the app is meant to run on Render (auto-deploy from GitHub), not permanently on Replit
+The app starts fine without credentials, it just won't process real webhooks
+Prompt for Replit Agent — EasyFind Phase 2: Inventory Search Paste everything below into the Replit agent as one instruction. It is written against the actual current repo (easyfind-inventory-engine, plain Node.js + Express, CommonJS, no TypeScript, no Redis, no OpenAI wired in yet), not the earlier speculative architecture docs. Where those docs (SAD/PRD/TDS) assumed something that doesn't match this repo, this prompt overrides them — that's called out explicitly below so you don't "fix" it back. --- ## 0. Golden rule — two phases, one house, no mingling Inventory Add and Inventory Search are two independent features that happen to live in the same webhook and the same repo. Search must never modify inventoryController.js, sessionManager.js (the Add-flow session machine), draftStore.js, normalizer.js, messageParser.js, or the write path in sheets.js (generatePIDAndAppend, updateImageUrls, findByPid). Those are Phase 1, done, frozen. Search gets its own session state, its own trigger words, its own read-only Sheets access, and its own files. The only shared surface is the top-level menu and the webhook dispatcher (webhookController.js), which just needs to learn to route to a second module. --- ## 1. Fix the entry menu (small, do this first) Today, src/inventory/inventoryResponses.js → mainMenu() says: > "Type 2 or Add Inventory to add a new property." Search doesn't exist yet, so it never offers a search option. Change it to present both, and add "Search Property" as a real trigger: - New mainMenu() copy: something like "🏠 Welcome to EasyFind!\n\nWhat would you like to do?\n\n1️⃣ Search Property\n2️⃣ Add Inventory\n\nJust type 1 or 2, or say what you're looking for." - Keep 2 / "Add Inventory" routing to the existing flow — don't touch that. - Add 1 / "Search Property" / "Search" as new triggers that hand off to the new search module (§3). - Important nuance: a customer typing straight into a fresh chat with something like "2bhk bellandur" should be treated as an implicit Search trigger too — don't force them through the numbered menu if they clearly stated a property need. Broker/onboarding-style trigger words (Add, Inventory, 2) stay reserved for the Add flow; anything else that isn't a recognized command and isn't mid-session in the Add flow should fall through to the search intent parser, which itself decides whether it has enough to search or needs to ask one clarifying question.
+I'm ready to start Phase 2 — inventory search. Attached is the full spec and a visual reference for the search response and gallery page. Please read both fully before writing any code.
+
+This builds on the existing repo — don't restructure or rewrite anything in src/inventory/, src/session/, src/normalizer/, or src/parser/ except the one explicitly approved change in §6b (the gallery link in the success message). Everything else is new files only.
+
+Start by confirming back to me: (1) your understanding of the menu change in §1, (2) the file plan in §7, and (3) what you'll need from me (env vars, sheet access, anything else) before you start writing code. Don't start coding until I confirm.
+
+That's it. Canva and Lovable are separate side-tracks (card visuals, prototype gallery) — not needed to unblock Replit, so don't wait on those.
+
+7 minutes ago
+Reading documents
+The user wants me to read both attached files fully before writing any code, then confirm my understanding of specific points before starting. Let me read both files.
+
+Reading existing files
+Let me read the key existing files before confirming my understanding. I need to look at the existing source files to understand the current structure.
+
+Let me read the relevant existing source files before confirming anything.
+
+$ find src -type f | sort
+Reviewing key files
+Let me read the remaining key files I need to understand before confirming my understanding to the user.
+
+Confirming understanding before coding
+I've read both files thoroughly. Now let me confirm my understanding back to the user before writing any code, as requested. I need to address:
+
+My understanding of the menu change in §1
+The file plan in §7
+What I'll need from them before starting
+Let me also check the referenceData.json and inventoryController.js to understand a bit more, but the user said don't start coding until they confirm - so I just need to give them my confirmation.
+
+Let me also quickly check the inventoryController to understand the success() call sites mentioned in §6b.
+
+$ grep -n "R\.success\|success(" src/inventory/inventoryController.js | head -20
+Confirming understanding
+The user wants me to read both files, then confirm my understanding before writing any code. I've now read everything I need. Let me confirm back clearly on the three points they asked about:
+
+My understanding of the menu change in §1
+The file plan in §7
+What I'll need from them before starting
+Let me compose a clear confirmation.
+
+I've read both files in full. Here's my confirmation before writing a single line of code:
+
+§1 — Menu change: what I understand
+
+mainMenu() in src/inventory/inventoryResponses.js currently reads:
+
+"Type 2 or Add Inventory to add a new property."
+
+I'll change it to present both options:
+
+"🏠 Welcome to EasyFind!\n\nWhat would you like to do?\n\n1️⃣ Search Property\n2️⃣ Add Inventory\n\nJust type 1 or 2, or say what you're looking for."
+
+Routing in webhookController.js gets a second hop: after inventoryController.tryHandleMessage() (unchanged, still first/highest priority so active Add sessions are never hijacked), I'll add searchController.tryHandleMessage() before the legacy Add Media / Delete Media fallback code. The search controller will recognise "1", "Search", "Search Property" as explicit triggers, and also treat any free-text message that isn't a recognised Add-flow command and isn't mid-session in the Add flow as an implicit search intent (passed to the intent parser to either run a search or ask one clarifying question).
+
+§7 — File plan: what I'll create
+
+New files only (nothing in src/inventory/, src/session/, src/normalizer/, src/parser/ touched except the two approved edits):
+
+src/search/
+  searchController.js          — tryHandleMessage() entry point
+  searchIntentParser.js        — regex/keyword intent extraction, reuses referenceData.json LOVs
+  searchEngine.js              — filter → rank → diversity pass → pagination
+  searchSessionManager.js      — per-phone Map with 30-min sliding TTL (mirrors sessionManager.js pattern)
+  searchResponses.js           — all customer-facing copy
+  tenantCompatibility.js       — FAMILY_EXCLUDES / BACHELOR_EXCLUDES table
+  availabilityNormalizer.js    — Excel serial → date, "Immediately" → "Ready now", verbatim fallback
+src/services/
+  locationMapping.js           — loads + caches Location Mapping tab, alias resolution
+  propertyCache.js             — loads + caches Live Tracking rows read-only, 5-min refresh
+src/routes/
+  gallery.js                   — GET /api/gallery/:pid
+src/views/
+  gallery.html                 — server-rendered template, styled per the mockup
+Approved edits to existing files:
+
+src/inventory/inventoryResponses.js — mainMenu() copy only, plus success() gets the gallery link line (§6b)
+src/controllers/webhookController.js — add the search routing hop between inventoryController and the legacy flows
+src/config/config.js — add publicBaseUrl from PUBLIC_BASE_URL env var
+.env.example — document PUBLIC_BASE_URL
+src/index.js — mount /api/gallery route + start the 5-min property/location cache refresh interval
+src/services/whatsapp.js — add sendImageMessage() and sendInteractiveButtonsMessage() alongside existing sendTextMessage()
+Also two new Google Sheets tabs that the code will write to but never read from Phase 1's perspective: Watch_List (zero-result captures) and Leads (Contact Now taps).
+
+§3 — What I need from you before starting
+
+I don't need anything to start coding. All credentials are already set as Replit secrets (I can see WHATSAPP_TOKEN, PHONE_NUMBER_ID, VERIFY_TOKEN, SPREADSHEET_ID, CLIENT_EMAIL, PRIVATE_KEY, CLOUDINARY_* are all present). The only new env var is PUBLIC_BASE_URL — I'll add it to config.js and .env.example with a sensible default (https://easyfindautomation.onrender.com), and you can set the Replit secret when you're ready to point it at a real domain.
+
+One question worth confirming before I go: the WHATSAPP_PHONE_NUMBER_ID (the business number used for the WhatsApp deep link CTA on the gallery page) — should the wa.me/ link use the same PHONE_NUMBER_ID already in config, or is there a separate customer-facing WhatsApp number I should use there? If you're not sure, I'll use the same one and you can update it later.
+
+Ready to start the moment you confirm.
+
+Add EasyFind Search Gallery Mockup v2 HTML file
+Jul 04, 2026, 7:50 PM
+No I have a different number customer facing: +91 9158338801
+
+3 minutes ago
+Implementing deep link
+Got it — +919158338801 for the wa.me/ deep link. Let me read the remaining files I need, then build everything.
+
+Thinking
+Now I have all the context I need. Let me build everything. I
+
+Time worked
+20 seconds
+Work done
+4 actions
+Items read
+439 lines
+Now wait it's +91 9148338801
+
+3 minutes ago
+Updating configuration and service
+Got it — the customer-facing number is +91 9148338801 (not 9158338801). Let me now build everything. I have all the context I need. Let me write all the files in parallel.
+
+Here's my build plan:
+
+src/config/config.js — add publicBaseUrl and customerWhatsappNumber
+.env.example — add PUBLIC_BASE_URL and WHATSAPP_CUSTOMER_NUMBER
+src/services/whatsapp.js — add sendImageMessage() and sendInteractiveButtonsMessage()
+src/services/sheets.js — add getAllProperties(), appendToTab() (for Leads and Watch_List)
+src/services/locationMapping.js — new service for location data
+src/services/propertyCache.js — new caching layer for properties
+src/search/availabilityNormalizer.js — normalize availability data across sources
+src/search/tenantCompatibility.js — match tenants to properties
+src/search/searchIntentParser.js — parse user search intent
+src/search/searchEngine.js — core search logic
+src/search/searchSessionManager.js — manage search sessions
+src/search/searchResponses.js — format search responses
+src/search/searchController.js — handle search requests
+src/routes — wire up the search endpoints

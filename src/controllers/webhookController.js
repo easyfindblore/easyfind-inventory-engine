@@ -24,6 +24,7 @@ const { sendTextMessage, downloadMedia, RESPONSES } = require('../services/whats
 const { uploadAllMedia } = require('../services/cloudinary');
 const { generatePIDAndAppend, findByPid, updateImageUrls } = require('../services/sheets');
 const inventoryController = require('../inventory/inventoryController');
+const searchController = require('../search/searchController');
 
 // Required fields for a valid property submission (legacy flow — kept for Add Media)
 const REQUIRED_FIELDS = ['location', 'rent', 'apartmentType'];
@@ -67,6 +68,13 @@ async function processMessage(message, metadata) {
   // Returns true if it consumed the message.
   const handledByInventory = await inventoryController.tryHandleMessage(message, metadata);
   if (handledByInventory) return;
+
+  // ── Search Flow ───────────────────────────────────────────────────────────
+  // searchController handles: explicit search triggers ("1", "Search Property"),
+  // active search sessions, and free-text property queries ("2bhk bellandur").
+  // Returns true if it consumed the message.
+  const handledBySearch = await searchController.tryHandleMessage(message, metadata);
+  if (handledBySearch) return;
 
   // ── Legacy flows (Add Media / Delete Media) ────────────────────────────────
 
