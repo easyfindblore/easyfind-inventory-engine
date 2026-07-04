@@ -3,7 +3,7 @@
 
 > **CURRENT STATE — Updated every session**
 
-**Last Updated:** 2026-07-04 | **Session:** 005
+**Last Updated:** 2026-07-04 | **Session:** 007
 
 ---
 
@@ -208,6 +208,32 @@ Steps:
 | D002 | `src/normalizer/normalizer.js` | Apartment type patterns too narrow — real-world variants like "apartment in gated community", "semi-gated community", "independent apartment" returned null and caused mandatory-field re-prompts | Expanded APARTMENT_TYPE_MAP with anchored patterns covering 20+ realistic variants; ordering preserved (Semi Gated before Gated Community); exclude guard retained |
 
 Code review re-run after fixes: **Pass — no Critical or High findings.**
+
+---
+
+## Session 007 Status (2026-07-04)
+
+### Objective
+Workspace sync and inventory finalization verification (scope-locked task document).
+
+### Findings
+All four Session 006 fixes (Society Name bare-line fallback, Preferred Tenant LOV normalization, Available From date normalization, Main Menu welcome text) were already fully implemented and committed at `8276b47`. The pending local commit (`692a43d`, `.replit` config only) was pushed to `origin/main` successfully.
+
+### Verification
+`npm test` — **170/170 passed**, no regressions. Application starts cleanly on port 3000.
+
+### Git State
+Local HEAD = remote HEAD = `692a43d`. Working tree clean. No uncommitted changes.
+
+---
+
+## Session 006 Status (2026-07-04)
+
+### Parser/Normalizer + Response Fixes (Scope Locked)
+Fixed 4 production issues: Society Name bare-line fallback for Gated/Semi-Gated (highest priority), Preferred Tenant LOV normalization (`normalizeTenantType()`), Available From date normalization (`normalizeAvailableFrom()`), Main Menu welcome text reword. Full detail in `REPLIT_ENGINEERING_LOG.md` Session 006.
+
+### Verification
+`npm test` — 170/170 passed, no regressions. 31 targeted test cases covering all four issues passed.
 
 ---
 
