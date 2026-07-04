@@ -1,6 +1,7 @@
 modules = ["nodejs-24", "python-3.11"]
 [agent]
 expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
 
 [nix]
 channel = "stable-25_05"
@@ -22,13 +23,13 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm start"
-waitForPort = 10000
-
-[workflows.workflow.metadata]
-outputType = "console"
+waitForPort = 3000
 
 [[ports]]
 localPort = 3000
