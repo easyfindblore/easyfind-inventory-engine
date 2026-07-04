@@ -790,3 +790,13 @@ No changes to search, WhatsApp webhook flow, session management, draft persisten
 
 - `property_message_090.md`'s `apartmentType` still resolves incorrectly (`". 2 bath"`) due to a pre-existing `community` regex issue unrelated to the five bugs in scope.
 - Balcony abbreviation `"1 balc"` (vs. full `"balcony"`) is not recognized — not covered by the reported bug set or the fixtures cited for it.
+
+### GitHub Push
+
+Found `GITHUB_PAT` already configured in Replit secrets (no longer blocked, contrary to prior session notes). Pushed local `main` directly to `origin/main` via `git push` using the PAT:
+
+```
+f2d551e..284d74b  main -> main
+```
+
+`main` (local, `origin/main`, and `gitsafe-backup/main`) are now all at `284d74b` — *Improve property details parsing and normalization accuracy*. This resolves blocker B001/T6.2 across `PROJECT_STATUS.md`, `START_HERE.md`, `docs/governance/implementation_tracker.md`, `docs/governance/ROADMAP.md`, `docs/governance/IMPLEMENTATION_CHECKLIST.md`, `docs/development/TEST_HANDOVER.md`, and `docs/development/WEBHOOK_INCIDENT_REPORT.md` — all updated in this session to reflect the resolved status. Render deployment and Meta webhook registration remain pending (require user action in the Render dashboard).

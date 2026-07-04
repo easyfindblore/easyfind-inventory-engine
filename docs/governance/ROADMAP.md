@@ -44,9 +44,9 @@ System design finalized. Technology stack locked. No further architectural chang
 **Done:** WhatsApp Cloud API, Google Sheets read/write, Cloudinary upload, media download.  
 **Remaining:** End-to-end integration test against live services.
 
-### 🔄 Phase 6 — Deployment (30% complete)
-**Done:** `render.yaml`, `.env.example`, workflow configured.  
-**Blocked:** GitHub PAT required before Render can auto-deploy. See `docs/development/WEBHOOK_INCIDENT_REPORT.md`.
+### 🔄 Phase 6 — Deployment (40% complete)
+**Done:** `render.yaml`, `.env.example`, workflow configured. `GITHUB_PAT` configured and `main` pushed to `origin/main` (Session 005) — GitHub Push (T6.2) is no longer blocked.  
+**Remaining:** Render auto-deploy verification, environment variables set in Render dashboard, Meta webhook URL registration.
 
 ### ⏳ Phase 5 — Testing & QA
 - Parser unit tests covering all Doc 04 example messages

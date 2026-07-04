@@ -83,8 +83,8 @@
 ## Pre-Deployment Checklist (Run Before Render Goes Live)
 
 ### GitHub
-- [ ] GitHub PAT configured and `git push origin main` succeeds
-- [ ] `main` branch reflects all current code
+- [x] GitHub PAT configured and `git push origin main` succeeds — done Session 005 (`main` at `284d74b`)
+- [x] `main` branch reflects all current code
 - [ ] No `.env` file committed (only `.env.example`)
 - [ ] `render.yaml` present and correct
 

@@ -35,7 +35,7 @@ This document tracks the progress of the EasyFind Inventory Engine project. It s
 | T5.1 | Testing | Parser Unit Tests | Medium | T3.1 | NOT STARTED | All Doc 04 examples pass. |
 | T5.2 | Testing | End-to-End Integration Test | High | T4.1-T4.4 | NOT STARTED | Full flow from WhatsApp to Sheets verified. |
 | T6.1 | Deployment | Render Configuration | High | T4.1 | DONE | render.yaml created. |
-| T6.2 | Deployment | GitHub Push | High | T6.1 | BLOCKED | Requires GitHub PAT. |
+| T6.2 | Deployment | GitHub Push | High | T6.1 | DONE | `GITHUB_PAT` configured; `main` pushed to `origin/main` (Session 005). |
 | T6.3 | Deployment | Render Deploy & Verify | High | T6.2 | NOT STARTED | Render auto-deploys after push. |
 | T6.4 | Deployment | Meta Webhook Registration | High | T6.3 | NOT STARTED | Challenge verified in Meta Console. |
 | T7.1 | Feature | Duplicate Detection | Medium | T5.2 | NOT STARTED | Per Doc 07. |

@@ -179,9 +179,9 @@ PORT                            ← defaults to 3000
 
 ---
 
-## Deployment Checklist (Blocked Until GitHub PAT Configured)
+## Deployment Checklist (GitHub Push Complete — Render Setup Pending)
 
-- [ ] Configure GitHub PAT so `git push origin main` succeeds
+- [x] Configure GitHub PAT so `git push origin main` succeeds — done Session 005 (`main` at `284d74b`)
 - [ ] Render auto-deploys from `main` (configured via `render.yaml`)
 - [ ] Set all environment variables in Render dashboard
 - [ ] Register `https://<render-url>/webhook` in Meta Developer Console
@@ -196,10 +196,10 @@ See `docs/development/WEBHOOK_INCIDENT_REPORT.md` for detailed verification step
 
 | ID | Blocker | Who Must Act |
 |----|---------|-------------|
-| B001 | GitHub PAT not configured | Project owner |
-| B002 | Render not deployed | Blocked on B001 |
+| B001 | ~~GitHub PAT not configured~~ RESOLVED Session 005 | — |
+| B002 | Render not deployed | Project owner (no longer blocked on B001) |
 | B003 | Meta webhook not registered | Blocked on B002 |
-| B004 | All env vars missing (WHATSAPP_*, GOOGLE_*, CLOUDINARY_*) | Project owner |
+| B004 | All env vars missing (WHATSAPP_*, GOOGLE_*, CLOUDINARY_*) in Render | Project owner |
 
 ---
 

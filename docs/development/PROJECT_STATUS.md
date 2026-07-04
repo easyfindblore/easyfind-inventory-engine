@@ -3,17 +3,17 @@
 
 > **CURRENT STATE — Updated every session**
 
-**Last Updated:** 2026-07-03 | **Session:** 001
+**Last Updated:** 2026-07-04 | **Session:** 005
 
 ---
 
-## Overall Completion: 35%
+## Overall Completion: 45%
 
 ---
 
 ## Current Phase
 
-**Phase 3: Core Modules Development** — IN PROGRESS
+**Phase 6: Deployment** — IN PROGRESS (GitHub push unblocked)
 
 ---
 
@@ -26,7 +26,7 @@
 | Phase 3: Core Modules Development | 🔄 IN PROGRESS | 70% |
 | Phase 4: Integrations | 🔄 IN PROGRESS | 50% |
 | Phase 5: Testing & QA | ⏳ NOT STARTED | 0% |
-| Phase 6: Deployment | 🔄 IN PROGRESS | 30% |
+| Phase 6: Deployment | 🔄 IN PROGRESS | 50% |
 | Phase 7: Future Enhancements | ⏳ NOT STARTED | 0% |
 
 ---
@@ -63,7 +63,7 @@
 | Module | Status | Blocker |
 |--------|--------|---------|
 | End-to-end Integration | Testing blocked | Credentials not configured |
-| GitHub Push | Blocked | PAT not configured |
+| GitHub Push | ✅ Unblocked — pushed Session 005 | None — `main` at `284d74b` |
 
 ---
 
@@ -82,8 +82,8 @@
 
 | ID | Item | Reason | Action Required |
 |----|------|--------|----------------|
-| B001 | GitHub Push | PAT authentication failure | User must configure GitHub PAT |
-| B002 | Render Deployment | GitHub push blocked | Resolve B001 first |
+| B001 | GitHub Push | ✅ RESOLVED Session 005 — `GITHUB_PAT` configured, `main` pushed to `origin/main` (`284d74b`) | None |
+| B002 | Render Deployment | No longer blocked on B001; Render env vars/deploy still pending | User configures Render service + env vars |
 | B003 | Google Sheets Integration | Credentials missing | User must set `GOOGLE_SERVICE_ACCOUNT_JSON` |
 | B004 | WhatsApp Integration | Credentials missing | User must set `WHATSAPP_*` env vars in Render |
 | B005 | Cloudinary Integration | Credentials missing | User must set `CLOUDINARY_*` env vars |
@@ -95,10 +95,12 @@
 **Status: NOT PRODUCTION READY**
 
 Blockers:
-- Credentials not configured
-- GitHub push pending
+- Credentials not configured (Google Sheets, WhatsApp, Cloudinary in Render)
 - Render deployment pending
 - Meta webhook URL not configured
+
+Resolved:
+- GitHub push (Session 005)
 
 ---
 
@@ -107,7 +109,7 @@ Blockers:
 | Environment | Status | Notes |
 |-------------|--------|-------|
 | Local (Replit) | ✅ Running | GET /webhook responds; POST /webhook processes |
-| Render (Production) | ❌ Not deployed | GitHub push required |
+| Render (Production) | ❌ Not deployed | GitHub push done — Render deploy still pending |
 | Meta Console | ❌ Not configured | Webhook URL not registered |
 
 ---
@@ -134,7 +136,7 @@ Blockers:
 | `package.json` | ✅ Created |
 | `render.yaml` | ✅ Created |
 | `.env.example` | ✅ Created |
-| GitHub Repository | ⚠️ Code not pushed |
+| GitHub Repository | ✅ Pushed — `main` at `284d74b` (Session 005) |
 | Render Service | ⚠️ Not deployed |
 
 ---
@@ -143,10 +145,10 @@ Blockers:
 
 | ID | Issue | Severity |
 |----|-------|----------|
-| I001 | GitHub PAT not configured — push blocked | HIGH |
-| I002 | No WhatsApp credentials | HIGH |
-| I003 | No Google Sheets service account | HIGH |
-| I004 | No Cloudinary credentials | HIGH |
+| I001 | ~~GitHub PAT not configured — push blocked~~ RESOLVED Session 005 | RESOLVED |
+| I002 | No WhatsApp credentials in Render | HIGH |
+| I003 | No Google Sheets service account in Render | HIGH |
+| I004 | No Cloudinary credentials in Render | HIGH |
 | I005 | Media download from WhatsApp not yet implemented | MEDIUM |
 | I006 | Duplicate detection deferred | LOW (by design) |
 
@@ -157,7 +159,7 @@ Blockers:
 **Milestone: First Successful Production Webhook**
 
 Steps:
-1. User configures GitHub PAT → push code to main
+1. ✅ GitHub PAT configured → code pushed to `main` (Session 005)
 2. Render auto-deploys
 3. User configures env vars in Render
 4. User registers Render URL in Meta Developer Console
@@ -206,6 +208,19 @@ Steps:
 | D002 | `src/normalizer/normalizer.js` | Apartment type patterns too narrow — real-world variants like "apartment in gated community", "semi-gated community", "independent apartment" returned null and caused mandatory-field re-prompts | Expanded APARTMENT_TYPE_MAP with anchored patterns covering 20+ realistic variants; ordering preserved (Semi Gated before Gated Community); exclude guard retained |
 
 Code review re-run after fixes: **Pass — no Critical or High findings.**
+
+---
+
+## Session 005 Status (2026-07-04)
+
+### Parser/Normalizer Bug Fixes
+Fixed 5 reported bugs, scope-locked to `src/parser/messageParser.js` and `src/normalizer/normalizer.js`: Location markdown leakage, Society Name URL leakage (highest priority) + landmark/unlabeled-name detection, Bathrooms/Balcony label-first extraction, Tenant Type without "Preferred", Vegetarian Restriction default/aliases. Full detail in `REPLIT_ENGINEERING_LOG.md` Session 005.
+
+### GitHub Push — RESOLVED
+`GITHUB_PAT` found configured in secrets. Pushed local `main` (`284d74b`) to `origin/main` successfully. GitHub Repository is no longer a blocker for Render deployment (B001/T6.2 resolved).
+
+### Verification
+`npm test` — 170/170 passed, no regressions.
 
 ---
 

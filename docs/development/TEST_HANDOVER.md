@@ -29,8 +29,8 @@ It contains everything required to design, execute, and report on the test suite
 | Graceful shutdown | ✅ SIGTERM / SIGINT with 10s force-exit |
 | Health endpoint | ✅ `GET /health` returns JSON |
 | Render config | ✅ `render.yaml` present and correct |
-| GitHub push | ❌ Blocked — GitHub OAuth not configured |
-| Render deployment | ❌ Blocked — depends on GitHub push |
+| GitHub push | ✅ Pushed — `GITHUB_PAT` configured, `main` at `284d74b` (Session 005) |
+| Render deployment | ❌ Not deployed — GitHub push no longer blocking; Render service/env vars still pending |
 | Live credentials | ❌ None configured — credentials required for live tests |
 
 ---
