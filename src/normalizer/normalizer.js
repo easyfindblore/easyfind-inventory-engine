@@ -44,6 +44,8 @@ const APARTMENT_TYPE_MAP = [
       /^apartments?\s+in\s+gated(\s+(community|society|layout|complex|project))?$/i,
       // "flat(s) in gated …"
       /^flats?\s+in\s+gated(\s+(community|society|layout|complex|project))?$/i,
+      // "gated community property" / "gated society property" etc.
+      /^gated\s+(community|apartment|society|flat|complex|area|colony|layout|project)\s+(property|flat|apartment|unit|area|complex)$/i,
       // "community" alone → almost always gated in practice
       /^community$/i,
     ],

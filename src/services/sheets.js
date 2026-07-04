@@ -57,14 +57,18 @@ const COLUMN_ORDER = [
  * @returns {import('googleapis').sheets_v4.Sheets|null}
  */
 function getSheetsClient() {
-  const credentials = config.google.serviceAccountJson;
-  if (!credentials) {
-    logger.warn('Google service account credentials not configured');
+  const { clientEmail, privateKey } = config.google;
+
+  if (!clientEmail || !privateKey) {
+    logger.warn('Google Sheets credentials not configured (CLIENT_EMAIL / PRIVATE_KEY missing)');
     return null;
   }
 
   const auth = new google.auth.GoogleAuth({
-    credentials,
+    credentials: {
+      client_email: clientEmail,
+      private_key:  privateKey,
+    },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
