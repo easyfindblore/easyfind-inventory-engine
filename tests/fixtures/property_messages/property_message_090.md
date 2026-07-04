@@ -1,16 +1,1 @@
-**Furnished** Partially Furnished
-**BHK** 5 BHK
-**Bathrooms** 3
-**Balcony** 1 , Attached Utility
-Rent: ₹50,000
-Maintenance: included
-Deposit: 80000
-Sq.ft: 1500 sqft
-Floor: 12th
-Available From: July 15
-Preferred Tenant: Corporate Lease
-Pets: allowed
-Community: Apartment
-Location: Sarjapur Road
-Society/Landmark: VRR Fortuna
-Google Maps Link: https://maps.app.goo.gl/YmmaEHU6KrqMtX3t7
+2BHK Semi furn in Bellandur gated community. 2 bath, 1 balc. Rent 45k + 4k maint. Dep 1.5L. 1200sqft, 5th floor. Avail from July 1st. Family pref. Pets ok. Society: Sobha Dream Acres. Link: https://maps.app.goo.gl/oQCKEG435u8Fp93U7
