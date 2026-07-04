@@ -1,0 +1,1 @@
+Search Query 71: Stand alone in Sarjapur Road under 40k

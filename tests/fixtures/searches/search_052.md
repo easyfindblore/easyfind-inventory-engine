@@ -1,0 +1,1 @@
+Search Query 52: budget 30-45k Stand alone Kasavanahalli

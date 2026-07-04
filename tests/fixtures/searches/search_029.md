@@ -1,0 +1,1 @@
+Search Query 29: under 60k Stand alone Kasavanahalli

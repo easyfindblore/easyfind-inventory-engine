@@ -1,0 +1,33 @@
+{
+    "id": "WEB-002",
+    "description": "Image Message",
+    "payload": {
+        "object": "whatsapp_business_account",
+        "entry": [
+            {
+                "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "messages": [
+                                {
+                                    "from": "SENDER_WA_ID",
+                                    "id": "MEDIA_MESSAGE_ID",
+                                    "timestamp": "TIMESTAMP",
+                                    "type": "image",
+                                    "image": {
+                                        "mime_type": "image/jpeg",
+                                        "sha256": "SHA256",
+                                        "id": "MEDIA_ID"
+                                    }
+                                }
+                            ]
+                        },
+                        "field": "messages"
+                    }
+                ]
+            }
+        ]
+    }
+}

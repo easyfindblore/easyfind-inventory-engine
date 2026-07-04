@@ -1,0 +1,1 @@
+Negative Test Case 12: Corrupted message: @#$!%^&*()_+ 2 BHK, Rent: 45000, Bellandur, Gated Community, 2 Bathrooms, 1 Balcony. Available Immediately. https://maps.app.goo.gl/oQCKEG435u8Fp93U7

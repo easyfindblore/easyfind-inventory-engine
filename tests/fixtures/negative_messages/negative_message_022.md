@@ -1,0 +1,1 @@
+Negative Test Case 22: Wrong spelling: 2 BHk, Rant: 45000, Belandur, Gated Comunity, 2 Bathroms, 1 Balcony. Available Immediatly. https://maps.app.goo.gl/oQCKEG435u8Fp93U7

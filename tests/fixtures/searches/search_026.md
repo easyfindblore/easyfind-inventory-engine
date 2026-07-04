@@ -1,0 +1,1 @@
+Search Query 26: Sarjapur Road 3 BHK Bachelor friendly

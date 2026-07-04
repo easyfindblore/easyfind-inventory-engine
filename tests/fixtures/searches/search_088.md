@@ -1,0 +1,1 @@
+Search Query 88: 1 BHK max 80k in Kasavanahalli

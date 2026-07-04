@@ -1,0 +1,1 @@
+Negative Test Case 35: Empty message.

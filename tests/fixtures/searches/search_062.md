@@ -1,0 +1,1 @@
+Search Query 62: Looking for 1 BHK Family only Kasavanahalli

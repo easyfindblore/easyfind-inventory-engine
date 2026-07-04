@@ -1,0 +1,1 @@
+Search Query 18: Stand alone in Marathahalli under 60k

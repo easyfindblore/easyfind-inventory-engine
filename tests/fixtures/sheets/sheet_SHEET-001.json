@@ -1,0 +1,30 @@
+{
+    "id": "SHEET-001",
+    "description": "Small Inventory",
+    "data": [
+        [
+            "PID",
+            "BHK",
+            "Rent",
+            "Location",
+            "Society",
+            "Status"
+        ],
+        [
+            "PID-1001",
+            "2 BHK",
+            "45000",
+            "Bellandur",
+            "Prestige Kew Gardens",
+            "Available"
+        ],
+        [
+            "PID-1002",
+            "3 BHK",
+            "60000",
+            "Harlur",
+            "Sobha Dream Acres",
+            "Available"
+        ]
+    ]
+}

@@ -1,0 +1,1 @@
+Search Query 54: around 50k Gated community Bellandur

@@ -1,0 +1,1 @@
+Search Query 11: Stand alone in Kasavanahalli under 40k

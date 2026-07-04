@@ -1,0 +1,1 @@
+Search Query 1: Sarjapur Road 1 BHK Bachelor friendly

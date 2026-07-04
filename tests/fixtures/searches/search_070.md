@@ -1,0 +1,1 @@
+Search Query 70: Looking for 1 BHK Bachelor friendly Marathahalli

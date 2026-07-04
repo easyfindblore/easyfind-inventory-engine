@@ -1,0 +1,1 @@
+Negative Test Case 7: Spam: BUY NOW! AMAZING DEALS! CLICK HERE!

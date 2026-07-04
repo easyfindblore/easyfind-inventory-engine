@@ -1,0 +1,1 @@
+Search Query 80: budget 30-45k Gated community Bellandur

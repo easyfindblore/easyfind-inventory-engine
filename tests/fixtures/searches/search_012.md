@@ -1,0 +1,1 @@
+Search Query 12: around 50k Stand alone Bellandur

@@ -1,0 +1,1 @@
+Search Query 7: Looking for 4 BHK Bachelor friendly Sarjapur Road

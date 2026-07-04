@@ -1,0 +1,1 @@
+Search Query 96: Stand alone in Kasavanahalli under 60k

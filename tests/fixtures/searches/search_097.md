@@ -1,0 +1,1 @@
+Search Query 97: 3 BHK around 50k in Marathahalli

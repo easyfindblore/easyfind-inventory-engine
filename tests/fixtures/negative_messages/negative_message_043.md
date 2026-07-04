@@ -1,0 +1,1 @@
+Negative Test Case 43: Only media (simulated): [Image attached] [Video attached]

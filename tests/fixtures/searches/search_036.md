@@ -1,0 +1,1 @@
+Search Query 36: 1 BHK budget 30-45k in Kasavanahalli

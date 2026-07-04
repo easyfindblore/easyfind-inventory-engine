@@ -1,0 +1,1 @@
+2BHK Semi furn in Bellandur gated community. 2 bath, 1 balc. Rent 45k + 4k maint. Dep 1.5L. 1200sqft, 5th floor. Avail from July 1st. Family pref. Pets ok. Society: Sobha Dream Acres. Link: https://maps.app.goo.gl/oQCKEG435u8Fp93U7

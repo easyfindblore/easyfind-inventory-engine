@@ -1,0 +1,1 @@
+Search Query 38: Kasavanahalli 2 BHK Pet friendly

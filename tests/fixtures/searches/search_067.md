@@ -1,0 +1,1 @@
+Search Query 67: under 40k Gated community Sarjapur Road

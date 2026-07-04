@@ -1,0 +1,1 @@
+Search Query 47: Penthouse in Marathahalli around 50k

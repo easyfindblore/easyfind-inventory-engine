@@ -1,0 +1,1 @@
+Search Query 24: Looking for 1 BHK Family only Bellandur
