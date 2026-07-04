@@ -159,7 +159,7 @@ const R = {
   // ── Main menu (returned to after SAVE / CANCEL / success ──────────────────
 
   mainMenu: () =>
-    `🏠 EasyFind\n\nType *2* or *Add Inventory* to add a new property.`,
+    `🏠 *Welcome to EasyFind!*\n\nYour inventory assistant is ready whenever you are.\n\nType *2* or *Add Inventory* to add a new property.`,
 
   // ── Duplicate property warning ─────────────────────────────────────────────
 

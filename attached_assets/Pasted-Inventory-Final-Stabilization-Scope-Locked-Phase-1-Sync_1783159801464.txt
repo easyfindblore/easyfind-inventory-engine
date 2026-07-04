@@ -1,0 +1,245 @@
+Inventory Final Stabilization — Scope Locked
+
+Phase 1 — Synchronize
+
+Before making any code changes:
+
+1. Synchronize the workspace with the latest GitHub repository.
+2. Confirm:
+    * Current branch
+    * Local HEAD
+    * Remote HEAD
+    * Workspace is fully synchronized
+3. Ensure the project builds and starts successfully.
+
+If synchronization cannot be completed, stop and report the issue.
+
+⸻
+
+Scope Lock (Non-Negotiable)
+
+This task is strictly limited to the issues listed below.
+
+Do NOT modify:
+
+* Search workflow
+* Search routes
+* Search prompts
+* Search UI
+* Webhook flow
+* Session management
+* Draft persistence
+* Image handling
+* Media handling
+* Google Sheets architecture
+* Cloudinary integration
+* Conversation flow
+* Validation flow
+* Processing flow
+* Success messages
+* Menus
+* Any other working functionality
+
+No refactoring.
+
+No cleanup.
+
+No architectural improvements.
+
+No “better ideas.”
+
+Fix only the items listed below.
+
+⸻
+
+Issue 1 — Society Name (Highest Priority)
+
+This is currently broken.
+
+Society Name is frequently blank.
+
+In one case, a Google Maps URL was written instead of the Society Name.
+
+This must be fixed completely.
+
+Business Rules:
+
+If Community = Gated
+
+→ Capture the society name whenever one is provided.
+
+Example:
+
+Community: Gated
+
+Amrutha Platinum Towers
+
+Result:
+
+Society Name = Amrutha Platinum Towers
+
+Never store a Google Maps URL as the Society Name.
+
+If Community = Semi Gated
+
+→ Capture the society name whenever one is explicitly provided.
+
+If Standalone / Independent House
+
+→ Leave Society Name blank.
+
+The parser must clearly distinguish between:
+
+* Society Name
+* Google Maps URL
+* Property Location
+
+These are separate fields.
+
+⸻
+
+Issue 2 — Preferred Tenant Mapping
+
+Current mapping is incorrect.
+
+Normalize broker input before writing to Google Sheets.
+
+Required mappings:
+
+Family
+
+Family Only
+
+Families
+
+Family Preferred
+
+→ Family Only
+
+Anyone
+
+Any
+
+Open For All
+
+All
+
+Anyone Preferred
+
+→ Anyone
+
+Bachelor
+
+Bachelors
+
+Bachelor Preferred
+
+→ Bachelor
+
+Working Professionals
+
+Professionals
+
+Corporate
+
+Students
+
+Map these correctly against the LOV.
+
+Do not fail because of capitalization, spacing or wording.
+
+⸻
+
+Issue 3 — Main Menu Welcome Message
+
+Do not redesign the application.
+
+Do not change the menu structure.
+
+The menu must continue to use:
+
+1️⃣ Add Inventory
+
+2️⃣ Search Property
+
+Only replace the text shown when the user reaches the main menu.
+
+Use the existing numbered menu.
+
+Do not introduce new commands.
+
+Do not add extra options.
+
+Do not change the conversation flow.
+
+Only make the opening message more professional and welcoming while keeping the numbered menu exactly as it is.
+
+Nothing else about the menu should change.
+
+⸻
+
+Issue 4 — Available From Normalization
+
+When writing to Google Sheets:
+
+If Available From is:
+
+* Immediately
+* Immediate
+* Ready to Occupy
+* Ready For Occupancy
+* Vacant
+
+or
+
+Any date before today’s date
+
+Store today’s date in the “Available From” column.
+
+If the broker provides a future date,
+
+store that future date unchanged.
+
+⸻
+
+Regression Protection
+
+The following are already working correctly.
+
+Do not modify them.
+
+* Image handling
+* Media association
+* Inventory conversation flow
+* Draft persistence
+* Duplicate protection
+* Property processing
+* Validation sequence
+* WhatsApp workflow
+
+⸻
+
+Validation
+
+Test every fix before finishing.
+
+Demonstrate:
+
+* Society Name is always captured correctly.
+* Google Maps URLs are never written into the Society Name column.
+* Preferred Tenant always maps correctly to the LOV.
+* The main menu still works exactly as before using options 1 and 2, with only the welcome text updated.
+* Available From normalization behaves correctly.
+
+⸻
+
+Final Report
+
+Provide:
+
+* Root cause for each issue.
+* Files modified.
+* Test cases executed.
+* Evidence that only the requested functionality was changed.
+
+Do not implement anything outside the scope of this document.

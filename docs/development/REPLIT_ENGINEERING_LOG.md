@@ -800,3 +800,65 @@ f2d551e..284d74b  main -> main
 ```
 
 `main` (local, `origin/main`, and `gitsafe-backup/main`) are now all at `284d74b` — *Improve property details parsing and normalization accuracy*. This resolves blocker B001/T6.2 across `PROJECT_STATUS.md`, `START_HERE.md`, `docs/governance/implementation_tracker.md`, `docs/governance/ROADMAP.md`, `docs/governance/IMPLEMENTATION_CHECKLIST.md`, `docs/development/TEST_HANDOVER.md`, and `docs/development/WEBHOOK_INCIDENT_REPORT.md` — all updated in this session to reflect the resolved status. Render deployment and Meta webhook registration remain pending (require user action in the Render dashboard).
+
+---
+
+## Session 006 — Inventory Final Stabilization (Scope Locked)
+
+**Date:** 2026-07-04
+**Trigger:** User-provided scope-locked stabilization document covering 4 issues: Society Name, Preferred Tenant mapping, Main Menu welcome text, Available From normalization.
+
+### Phase 1 — Synchronize (per instructions)
+
+- Branch: `main`. Local HEAD and remote HEAD both confirmed at `43a0da53ffed3f3a7cf5b4c0b172ec552d26808c` (via `git ls-remote` — local `git fetch` is blocked as a sandboxed ref write, so `ls-remote` was used instead to avoid touching `.git/refs`).
+- `npm test` passed 170/170 before any changes; workflow restarted cleanly. Synchronization confirmed — proceeded to Phase 2.
+
+### Root Cause & Fix — Issue 1: Society Name
+
+**Root cause:** The parser only captured a Society Name when an explicit `Society:`/`Landmark:`/`Project:`/`Building:` label was present, or via a narrow known-builder-name fallback. Brokers frequently write the society name as a bare line directly under `Community: Gated` with no label at all — this case fell through to `null`, and in some messages a Google Maps URL on the next line was mistakenly captured instead.
+
+**Fix (`src/parser/messageParser.js`):** Added a new fallback — when Community resolves to Gated or Semi Gated and no society name was found via the existing paths, the line immediately following the Community line is used as the society name, provided it is not itself a URL and does not start with another field's label (location/rent/deposit/etc.). This never fires for Stand Alone.
+
+**Fix (`src/normalizer/normalizer.js`):** `normalizeSocietyName()` now unconditionally blanks the Society Name when `apartmentType === 'Stand Alone'`, as a safety net regardless of what the parser captured (defense-in-depth alongside the parser-level exclusion and the existing URL-pattern guard).
+
+### Root Cause & Fix — Issue 2: Preferred Tenant Mapping
+
+**Root cause:** `tenantType` was passed through to Google Sheets verbatim with no normalization, so broker wording variants (`Family`, `Families`, `Family Preferred`, `Any`, `All`, `Open For All`, `Bachelors`, etc.) never collapsed onto a consistent LOV value.
+
+**Fix (`src/normalizer/normalizer.js`):** Added `normalizeTenantType()` with an explicit synonym map (case-insensitive, whitespace-collapsed) — Family/Family Only/Families/Family Preferred → `Family Only`; Anyone/Any/Open For All/All/Anyone Preferred → `Anyone`; Bachelor/Bachelors/Bachelor Preferred → `Bachelor`; Working Professionals, Professionals, Corporate, Students normalize to their own canonical casing. Text with no LOV match (e.g. `Family & Male Bachelors`) is preserved unchanged rather than blanked or guessed.
+
+### Root Cause & Fix — Issue 3: Main Menu Welcome Message
+
+**Root cause:** `R.mainMenu()` (`src/inventory/inventoryResponses.js`) used a terse single-line message.
+
+**Fix:** Reworded to a more professional, welcoming opening line while keeping the exact same trigger text (`Type *2* or *Add Inventory*...`) and all call sites unchanged — no new commands, options, or menu structure introduced.
+
+**Scope discrepancy flagged:** The stabilization document describes the main menu as a numbered `1️⃣ Add Inventory / 2️⃣ Search Property` menu. No such numbered menu or Search Property feature exists anywhere in this codebase (confirmed via full-repo search of `src/` and `docs/`) — `replit.md` explicitly prohibits implementing Search until requested, and the scope lock itself prohibits adding new options/commands. Only the existing `mainMenu()` text was reworded; no Search Property option was fabricated.
+
+### Root Cause & Fix — Issue 4: Available From Normalization
+
+**Root cause:** `availableFrom` was stored verbatim with no date logic, so phrases like `Immediately`/`Vacant` and dates already in the past were written to Sheets as-is instead of resolving to today's date.
+
+**Fix (`src/normalizer/normalizer.js`):** Added `normalizeAvailableFrom()` — recognizes `Immediately`, `Immediate`, `Ready to Occupy`, `Ready For Occupancy`, `Vacant` (case-insensitive) and maps them to today's date (`YYYY-MM-DD`, matching the existing `dateAdded` ISO-date convention used elsewhere in `sheets.js`). A companion date parser (`tryParseAvailableFromDate`) recognizes `"July 15"`, `"15 July"`, `"DD/MM/YYYY"`, and `"YYYY-MM-DD"` formats; any parsed date earlier than today also resolves to today's date. Future dates and unparseable free text are preserved unchanged — never guessed.
+
+### Verification
+
+- Full regression suite: **170/170 passed** (100 property + 50 negative + 18 normalizer edge cases + 2 webhook structure) — no regressions.
+- 31 targeted test cases written and executed covering all four issues directly against `parseMessage()` + `normalize()`:
+  - Society Name: Gated + bare line, Gated + Maps-URL-only (blank), Gated + society line followed by Maps URL, Semi Gated + bare line, Standalone (blank even with explicit Society label present), and explicit `Society/Landmark:` label still works — 7/7 passed.
+  - Preferred Tenant: all listed synonyms for Family Only / Anyone / Bachelor, plus Working Professionals / Professionals / Corporate / Students — 16/16 passed.
+  - Available From: all 5 immediate-availability phrases, a past date with no year, a future date with no year, and an explicit past date with year — 8/8 passed.
+- Workflow restarted and confirmed booting cleanly post-change (`All credentials configured`, `Ready to receive WhatsApp webhooks`).
+
+### Files Modified
+
+- `src/parser/messageParser.js` — Society Name Gated/Semi-Gated bare-line fallback.
+- `src/normalizer/normalizer.js` — Standalone Society Name safety net, `normalizeTenantType()`, `normalizeAvailableFrom()`.
+- `src/inventory/inventoryResponses.js` — `mainMenu()` wording only.
+- `docs/development/REPLIT_ENGINEERING_LOG.md` (this entry)
+
+### Evidence Only Requested Functionality Was Changed
+
+- `git diff --stat` confirms exactly 3 source files touched (`messageParser.js`, `normalizer.js`, `inventoryResponses.js`), matching the scope lock's file boundaries.
+- No changes made to: search workflow/routes/prompts/UI (none exist in this codebase), webhook flow (`webhook.js`, `webhookController.js` untouched), session management (`sessionManager.js` untouched), draft persistence (`draftStore.js` untouched), image/media handling (`cloudinary.js` untouched), Google Sheets architecture (`sheets.js` untouched), conversation/validation/processing flow (`inventoryController.js` untouched aside from being the caller of the unchanged `mainMenu()` function), success messages (unchanged), or any other menu (`welcome()`, `statusEmpty()`, `help()`, `midSessionMenu()`, `returnMenu()`, `whatNext()`, etc. — all untouched).
+- Full regression suite passed with zero failures both before and after the change set, confirming no working functionality regressed.

@@ -362,6 +362,27 @@ function parseMessage(mergedText, rawMessage) {
       }
     }
 
+    // Society fallback — Gated/Semi Gated with no "Society:"/"Landmark:"
+    // label at all, e.g.:
+    //   Community: Gated
+    //   Amrutha Platinum Towers
+    // The society name is given as a bare line directly under the
+    // Community line. Only applies when Community indicates Gated or
+    // Semi Gated (never for Stand Alone). The candidate line is rejected
+    // if it is itself a URL or another field's label, so a Google Maps
+    // link or an unrelated field is never mistaken for a society name.
+    if (!result.societyName && result.apartmentType && /gated/i.test(result.apartmentType)) {
+      const communityLineMatch = text.match(/\bcommunity\s*[:\-–]?\s*[^\n]*\n+\s*([^\n]+)/i);
+      if (communityLineMatch) {
+        const candidateLine = communityLineMatch[1].trim();
+        const isUrl = PATTERNS.mapsLink.test(candidateLine) || /https?:\/\/|www\./i.test(candidateLine);
+        const isOtherLabel = /^(location|society|landmark|project|building|rent|deposit|maintenance|bhk|bathroom|washroom|toilet|balcon|floor|avail|tenant|pets?|veg|furnish|negotiat|visit|community|size|sqft|sq\.?\s*ft|utility|onboard|online|offline)\b/i.test(candidateLine);
+        if (candidateLine && !isUrl && !isOtherLabel) {
+          result.societyName = cleanSocietyCapture(candidateLine);
+        }
+      }
+    }
+
     // Google Maps Link — last URL wins
     const allMapsMatches = [...text.matchAll(new RegExp(PATTERNS.mapsLink.source, 'gi'))];
     if (allMapsMatches.length > 0) {
