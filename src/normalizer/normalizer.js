@@ -17,27 +17,49 @@ const logger = require('../utils/logger');
 
 // ─── Apartment Type Mapping ───────────────────────────────────────────────────
 
+// Apartment type patterns are evaluated top-to-bottom; first match wins.
+// Each entry may have an `exclude` list that must NOT match (checked before patterns).
+// Patterns are anchored to prevent partial cross-matching (e.g. "semi furnished" ≠ "semi gated").
 const APARTMENT_TYPE_MAP = [
-  {
-    output: 'Gated Community',
-    patterns: [/^gated(\s+community|\s+apartment|\s+society)?$/i],
-  },
+  // ── Semi Gated (must come before Gated Community to avoid "semi gated" → Gated Community) ──
   {
     output: 'Semi Gated',
-    patterns: [/^semi[\s-]?gated$/i, /^semi$/i],
-    // IMPORTANT: must not match "semi furnished"
+    patterns: [
+      /^semi[\s-]?gated(\s+(community|apartment|society|flat|complex))?$/i,
+      /^semi[\s-]?gated\s+area$/i,
+      // standalone "semi" only when clearly not "semi furnished"
+      /^semi$/i,
+    ],
+    // "semi furnished", "semi-furnished" must NEVER match here
     exclude: [/furnished/i],
   },
+
+  // ── Gated Community ──────────────────────────────────────────────────────────
+  {
+    output: 'Gated Community',
+    patterns: [
+      // simple "gated" / "gated community" / "gated apartment" / "gated society"
+      /^gated(\s+(community|apartment|society|flat|complex|area|colony|layout|project))?$/i,
+      // "apartment(s) in gated community/society/layout"
+      /^apartments?\s+in\s+gated(\s+(community|society|layout|complex|project))?$/i,
+      // "flat(s) in gated …"
+      /^flats?\s+in\s+gated(\s+(community|society|layout|complex|project))?$/i,
+      // "community" alone → almost always gated in practice
+      /^community$/i,
+    ],
+  },
+
+  // ── Stand Alone ───────────────────────────────────────────────────────────────
   {
     output: 'Stand Alone',
     patterns: [
       /^stand[\s-]?alone$/i,
       /^standalone$/i,
-      /^independent\s+house$/i,
-      /^independent\s+villa$/i,
+      /^independent\s+(house|villa|floor|apartment|flat|building|bungalow|duplex|property|home|unit)$/i,
       /^villa$/i,
       /^duplex\s+villa$/i,
-      /^independent\s+floor$/i,
+      /^row\s+house$/i,
+      /^bungalow$/i,
     ],
   },
 ];
@@ -52,7 +74,11 @@ function normalizeApartmentType(raw) {
       return entry.output;
     }
   }
-  return null; // unknown — leave blank
+
+  // "apartment", "flat", "society" alone are genuinely ambiguous — return null
+  // so the session manager re-prompts the sender for clarification.
+  logger.debug('normalizeApartmentType: no match — will re-prompt sender', { raw: s });
+  return null;
 }
 
 // ─── Furnishing Mapping ───────────────────────────────────────────────────────

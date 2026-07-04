@@ -355,12 +355,22 @@ Rule: neither agent overwrites the other's work. Manus findings are treated as o
 
 ---
 
+### GitHub Push — Resolved
+
+Push succeeded on second attempt. Sequence:
+1. Replit GitHub OAuth integration dismissed by user.
+2. Built-in `gitPush` callback returned `PUSH_REJECTED` / `provider: null` — no account credentials present.
+3. User added `GITHUB_PAT` secret.
+4. Remote had a divergent Manus commit (`e661ebb` — `tests/` directory only, no source conflict).
+5. Merged remote Manus commit with `git merge origin/main --no-edit`, then pushed.
+6. Final state: `origin/main` = `9dd09f3`, working tree clean, all commits present.
+
 ### Blocked Items
 
 | ID | Blocker | Resolution |
 |----|---------|-----------|
-| B001 | GitHub PAT / OAuth not configured | User must complete GitHub OAuth via Replit integration |
-| B002 | Render not deployed | Blocked on B001 |
+| B001 | ~~GitHub PAT / OAuth not configured~~ | **Resolved** — GITHUB_PAT secret added; push complete |
+| B002 | Render not deployed | Blocked on env var configuration |
 | B003 | Meta webhook not registered | Blocked on B002 |
 | B004 | All production env vars missing | User must configure in Render dashboard |
 
@@ -373,5 +383,65 @@ Engineering audit passed. Two-agent governance model documented across all conti
 ---
 
 *End of Session 002*
+
+---
+
+## SESSION 003
+
+**Date & Time:** 2026-07-04
+
+**Objective:** Resolve all Critical and Priority-2 defects identified in Session 002 code review. No new functionality.
+
+---
+
+### Actions Taken
+
+1. **Priority 1 fix — `src/services/sheets.js` (`generatePIDAndAppend`):**
+   - Added explicit `rows === null` guard immediately after `getAllRows()`.
+   - If null: logs error, returns `{ok:false, pid:null, reason:'SHEETS_READ_FAILURE'}` — no PID generated, no media uploaded, no row appended.
+   - Controller destructures only `{ok: saved, pid}` — unaffected by new `reason` field; both failure reasons handled uniformly.
+   - In-process lock (`_pidLock`) remains healthy; chained `.catch()` returns resolved failure, so no lock poisoning.
+
+2. **Priority 2 fix — `src/normalizer/normalizer.js` (`normalizeApartmentType`):**
+   - Replaced narrow pattern set with 20+ anchored regex patterns across three canonical outputs.
+   - Semi Gated entry retains `exclude: [/furnished/i]` guard and remains first in evaluation order.
+   - Gated Community now accepts: "gated", "gated community/apartment/society/flat/complex/area/colony/layout/project", "apartment(s)/flat(s) in gated community/society/layout/complex/project", "community".
+   - Semi Gated now accepts: "semi gated", "semi-gated", "semi gated community/apartment/society/flat/complex/area", "semi".
+   - Stand Alone now accepts: "stand alone", "standalone", "independent house/villa/floor/apartment/flat/building/bungalow/duplex/property/home/unit", "villa", "duplex villa", "row house", "bungalow".
+   - Genuinely ambiguous bare values ("apartment", "flat", "society") continue to return null — existing session manager re-prompts sender for clarification.
+
+3. **Code review re-run:** Pass — no Critical or High findings.
+
+4. **Documentation updated:** `PROJECT_STATUS.md` defect table, this log entry.
+
+5. **Committed and pushed to origin/main.**
+
+---
+
+### Verification
+
+- App starts cleanly post-edit (workflow logs confirm no errors).
+- Second-pass architect review explicitly confirmed:
+  - No duplicate PID path under read failure.
+  - Controller `ok:false` handling independent of `reason` field.
+  - Apartment type regex ordering safe; no cross-matching.
+  - `semi furnished` cannot be misclassified as Semi Gated.
+
+---
+
+### Remaining Engineering Risks
+
+| Risk | Severity | Notes |
+|------|----------|-------|
+| No automated tests for PID null-row abort path | Medium | Manus regression suite will cover this |
+| No automated tests for apartment type edge patterns | Medium | Manus regression suite will cover this |
+| Single-process PID mutex — unsafe if Render scales to >1 instance | Low | Render free/starter tier is single-instance; document constraint |
+| Full dropdown field validation not implemented (tenant type, floor, etc.) | Low | Deferred by design; unknown values pass through as-is |
+| Duplicate detection not implemented | Low | Task #4, deferred by design |
+| All production env vars unset | High | Blocks deployment; user must configure in Render dashboard |
+
+---
+
+*End of Session 003*
 
 ---

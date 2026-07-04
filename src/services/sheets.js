@@ -249,32 +249,43 @@ let _pidLock = Promise.resolve();
  */
 function generatePIDAndAppend(property, getImageUrls, senderPhone, messageId) {
   _pidLock = _pidLock.then(async () => {
-    // 1. Read current rows to determine today's sequence number
+    // 1. Read current rows to determine today's sequence number.
+    //    FAIL-CLOSED: if the read fails or returns null for any reason, abort
+    //    the entire operation. Generating a PID against an unknown row-count
+    //    would risk duplicate PIDs; no write must ever occur in that state.
     const rows = await getAllRows();
+
+    if (rows === null) {
+      logger.error('generatePIDAndAppend aborted — Sheets row read returned null; cannot guarantee unique PID', {
+        senderPhone,
+        messageId,
+      });
+      return { ok: false, pid: null, reason: 'SHEETS_READ_FAILURE' };
+    }
+
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
     let todayCount = 0;
-    if (rows) {
-      for (let i = 1; i < rows.length; i++) {
-        const dateAdded = rows[i][COLUMN_ORDER.indexOf('dateAdded')];
-        if (dateAdded && dateAdded.startsWith(todayStr)) {
-          todayCount++;
-        }
+    for (let i = 1; i < rows.length; i++) {
+      const dateAdded = rows[i][COLUMN_ORDER.indexOf('dateAdded')];
+      if (dateAdded && dateAdded.startsWith(todayStr)) {
+        todayCount++;
       }
     }
+
     const pid = generatePID(today, todayCount + 1);
 
-    // 2. Upload media (if any) using the confirmed PID — still inside lock
+    // 2. Upload media (if any) using the confirmed PID — still inside lock.
     //    Any upload failure throws, which propagates to the catch below.
     const imageUrls = await getImageUrls(pid);
 
-    // 3. Append row — still inside lock
+    // 3. Append row — still inside lock.
     const ok = await appendProperty(property, pid, imageUrls, senderPhone, messageId);
     return { ok, pid };
   }).catch((err) => {
     logger.error('generatePIDAndAppend failed', { error: err.message });
-    return { ok: false, pid: null };
+    return { ok: false, pid: null, reason: 'UNEXPECTED_ERROR' };
   });
 
   return _pidLock;

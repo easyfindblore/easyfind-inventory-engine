@@ -179,6 +179,17 @@ Steps:
 
 ---
 
+## Defect Fixes — Session 003 (2026-07-04)
+
+| ID | File | Defect | Fix |
+|----|------|--------|-----|
+| D001 | `src/services/sheets.js` | `generatePIDAndAppend` continued with `todayCount=0` when `getAllRows()` returned null — duplicate PID possible under transient Sheets read failure | Hard abort: returns `{ok:false, pid:null, reason:'SHEETS_READ_FAILURE'}` before any PID generation, media upload, or row append |
+| D002 | `src/normalizer/normalizer.js` | Apartment type patterns too narrow — real-world variants like "apartment in gated community", "semi-gated community", "independent apartment" returned null and caused mandatory-field re-prompts | Expanded APARTMENT_TYPE_MAP with anchored patterns covering 20+ realistic variants; ordering preserved (Semi Gated before Gated Community); exclude guard retained |
+
+Code review re-run after fixes: **Pass — no Critical or High findings.**
+
+---
+
 ## Engineering Governance
 
 **Two-agent model active as of Session 002.**
