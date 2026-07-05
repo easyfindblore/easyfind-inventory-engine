@@ -45,7 +45,7 @@ const PATTERNS = {
   deposit: /\bdeposit\s*[:\-–]?\s*[₹]?\s*([\d,.]+\s*(?:k|l|lakh|lakhs?|thousand|months?))/i,
 
   // Size / Sqft
-  sqft: /(?:sq\.?\s*ft\.?|sqft|sft|square\s*f(?:ee|oo)t)\s*[:\-–]?\s*([\d,.]+)|(\d[\d,.]*)\s*(?:sq\.?\s*ft\.?|sqft|sft)/i,
+  sqft: /(?:sq\.?\s*ft\.?|sqft|sft|square\s*f(?:ee|oo)t|area)\s*[:\-–]?\s*([\d,.]+)|(\d[\d,.]*)\s*(?:sq\.?\s*ft\.?|sqft|sft)/i,
 
   // Floor: "Floor: 18/18", "Floor: G/2", "5th floor", "Ground floor"
   floor: /\bfloor\s*[:\-–]?\s*([^\n,]+?)(?:\n|,|$)|\b(\d+(?:st|nd|rd|th)?\s*\/?\s*\d*\s*(?:floor)?)\b/i,
@@ -225,16 +225,36 @@ function parseMessage(mergedText, rawMessage) {
   };
 
   try {
+    // ─── Phase 1: Hard-Mapped / Manual Extraction (Header First) ───
+    const lines = (mergedText || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length > 0) {
+      const firstLine = stripMarkdownFormatting(lines[0]);
+      
+      // Header BHK, Bathrooms, Balcony (e.g. "3 BHK with 2 Bathrooms, 1 Balcony")
+      const bhkMatch = firstLine.match(/(\d+)\s*(bhk|rk)/i);
+      if (bhkMatch) result.bhk = `${bhkMatch[1]} ${bhkMatch[2].toUpperCase()}`;
+
+      const bathMatch = firstLine.match(/(\d+)\s*(?:bath(?:room)?s?|washrooms?|toilets?)/i);
+      if (bathMatch) result.bathrooms = parseInt(bathMatch[1], 10);
+
+      const balcMatch = firstLine.match(/(\d+)\s*balcon(?:y|ies)/i);
+      if (balcMatch) result.balcony = parseInt(balcMatch[1], 10);
+    }
+
+    // ─── Phase 2: Pattern Matching (Standard Extraction) ───
+
     // Helper: get last match from a global search (latest-value-wins per Doc 02)
     const lastMatch = (pattern) => {
       const all = [...text.matchAll(new RegExp(pattern.source, 'gi'))];
       return all.length ? all[all.length - 1] : null;
     };
 
-    // BHK — latest value wins
-    const bhkMatch = lastMatch(PATTERNS.bhk);
-    if (bhkMatch) {
-      result.bhk = `${bhkMatch[1]} ${bhkMatch[2].toUpperCase()}`;
+    // BHK — latest value wins (if not already set by header)
+    if (!result.bhk) {
+      const bhkMatch = lastMatch(PATTERNS.bhk);
+      if (bhkMatch) {
+        result.bhk = `${bhkMatch[1]} ${bhkMatch[2].toUpperCase()}`;
+      }
     }
 
     // Bathrooms — supports both "2 Bathrooms" (value-first) and
@@ -258,7 +278,7 @@ function parseMessage(mergedText, rawMessage) {
     if (balconyAllMatches.length > 0) {
       const lastBalcony = balconyAllMatches.reduce((a, b) => (b.index > a.index ? b : a));
       result.balcony = parseBalcony(lastBalcony[1]);
-    } else if (/\b(huge|large|spacious|long|private)\s+balcon(?:y|ies)\b/i.test(text)) {
+    } else if (!result.balcony && /\b(huge|large|spacious|long|private)\s+balcon(?:y|ies)\b/i.test(text)) {
       result.balcony = 1; // descriptor without count → 1
     }
 
@@ -342,7 +362,20 @@ function parseMessage(mergedText, rawMessage) {
     // stripped, so "*Bellandur*" no longer leaks asterisks into the sheet.
     const locationMatch = lastMatch(PATTERNS.location);
     if (locationMatch) {
+      // If the location line is followed by another line (e.g. society), we might need to be careful.
+      // But for now, just take the matched group.
       result.location = locationMatch[1].replace(/\s+/g, ' ').trim() || null;
+    }
+
+    // Manual fallback for Location if it contains commas or is followed by society
+    if (result.location && result.location.includes(',')) {
+      // Already has detail
+    } else if (result.location) {
+       // Check if there's more detail in the raw line
+       const locLine = lines.find(l => l.toLowerCase().includes('location:'));
+       if (locLine) {
+         result.location = stripMarkdownFormatting(locLine.split(/location:/i)[1]).trim();
+       }
     }
 
     // Society — latest value wins. Cleaned to cut off any trailing
@@ -372,12 +405,16 @@ function parseMessage(mergedText, rawMessage) {
     // if it is itself a URL or another field's label, so a Google Maps
     // link or an unrelated field is never mistaken for a society name.
     if (!result.societyName && result.apartmentType && /gated/i.test(result.apartmentType)) {
-      const communityLineMatch = text.match(/\bcommunity\s*[:\-–]?\s*[^\n]*\n+\s*([^\n]+)/i);
-      if (communityLineMatch) {
-        const candidateLine = communityLineMatch[1].trim();
+      // Look for society name after Location or Community
+      const searchAfter = result.location ? 'location' : 'community';
+      const pattern = new RegExp(`\\b${searchAfter}\\s*[:\\-–]?\\s*[^\\n]*\\n+\\s*([^\\n]+)`, 'i');
+      const match = text.match(pattern);
+      
+      if (match) {
+        const candidateLine = match[1].trim();
         const isUrl = PATTERNS.mapsLink.test(candidateLine) || /https?:\/\/|www\./i.test(candidateLine);
-        const isOtherLabel = /^(location|society|landmark|project|building|rent|deposit|maintenance|bhk|bathroom|washroom|toilet|balcon|floor|avail|tenant|pets?|veg|furnish|negotiat|visit|community|size|sqft|sq\.?\s*ft|utility|onboard|online|offline)\b/i.test(candidateLine);
-        if (candidateLine && !isUrl && !isOtherLabel) {
+        const isOtherLabel = /^(location|society|landmark|project|building|rent|deposit|maintenance|area|sqft|floor|avail|tenant|pets|furnish|utility|veg|non)/i.test(candidateLine);
+        if (!isUrl && !isOtherLabel) {
           result.societyName = cleanSocietyCapture(candidateLine);
         }
       }
